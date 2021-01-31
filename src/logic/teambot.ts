@@ -7,15 +7,13 @@ export class TeamBot extends Bot {
         super(teamSpeakHandle, serverName);
     }
 
-    clientMoved(event: ClientMoved): Promise<[]> | undefined {
+    clientMoved(event: ClientMoved): void {
         const client = event.client;
         const channel = event.channel;
 
         // Keine nicht Team Member in Team Channel!
         if (this._teamGroupHandle && this._tsDefaultChannel) {
-            const isTeamMember = client.servergroups.indexOf(this._teamGroupHandle.sgid) >= 0;
-            if (channel.name.includes('Team') && !isTeamMember) return client.move(this._tsDefaultChannel.cid);
+            if (channel.name.includes('Team') && !this.isTeamMember(event.client)) this.moveToDefaultChannel(client);
         }
-        return;
     }
 }
