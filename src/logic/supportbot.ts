@@ -4,7 +4,7 @@ import { ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 import { Bot } from './bot';
 
 export class SupportBot extends Bot {
-    private _supportChannelName: string[] = ['Support', 'Termin', 'Whitelist'];
+    private _supportChannelName: string[] = ['Support', 'Termin'];
     private _supportChannelHandle: TeamSpeakChannel[] = [];
     private _supportGroupName: string = process.env.TS_SUPPORT_GROUP || 'Bereitschaft';
     private _supportGroupHandle: TeamSpeakServerGroup | undefined;
@@ -76,6 +76,7 @@ export class SupportBot extends Bot {
 
         // Keine TP nach 30 Sekunden
         setTimeout(async () => {
+            if (!client) return;
             if (client.cid !== channel.cid) return;
 
             const info = await client.getInfo();
@@ -87,6 +88,7 @@ export class SupportBot extends Bot {
 
         // Keine TP nach 90 Sekunden
         setTimeout(async () => {
+            if (!client) return;
             if (client.cid !== channel.cid) return;
 
             const info = await client.getInfo();
