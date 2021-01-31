@@ -75,7 +75,11 @@ export class Bot {
     private flooding(error: ResponseError) {
         console.log(error);
     }
-
+    /**
+     * Converts unix time into human readable time
+     * @param  {number} timestamp UNIX timestamp
+     * @returns string Date in dd. MMM yyyy HH:ii:ss
+     */
     timeConverter(timestamp: number): string {
         const a = new Date(timestamp * 1000);
         const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
