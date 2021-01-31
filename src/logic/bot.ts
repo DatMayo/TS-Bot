@@ -1,5 +1,12 @@
 import * as dotenv from 'dotenv';
-import { ResponseError, TeamSpeak, TeamSpeakChannel, TeamSpeakServer, TeamSpeakServerGroup } from 'ts3-nodejs-library';
+import {
+    ResponseError,
+    TeamSpeak,
+    TeamSpeakChannel,
+    TeamSpeakClient,
+    TeamSpeakServer,
+    TeamSpeakServerGroup,
+} from 'ts3-nodejs-library';
 import { ClientConnect, ClientDisconnect, ClientMoved, TextMessage } from 'ts3-nodejs-library/lib/types/Events';
 import { TSExitCode } from '../enums';
 
@@ -75,6 +82,26 @@ export class Bot {
     private flooding(error: ResponseError) {
         console.log(error);
     }
+    /**
+     * Checks if the given client is a team member
+     * @param {TeamSpeakClient} client Client to check
+     * @returns boolean Returns false, if the given client is not a team member
+     */
+    isTeamMember(client: TeamSpeakClient): boolean {
+        if (!this._teamGroupHandle) return false;
+        return client.servergroups.indexOf(this._teamGroupHandle.sgid) >= 0;
+    }
+    /**
+     * Moves a client back to the default channel
+     * @param {TeamSpeakClient} client Client handle
+     * @returns void
+     */
+    moveToDefaultChannel(client: TeamSpeakClient): void {
+        if (!this._tsDefaultChannel) return;
+        client.move(this._tsDefaultChannel.cid);
+        return;
+    }
+
     /**
      * Converts unix time into human readable time
      * @param  {number} timestamp UNIX timestamp
