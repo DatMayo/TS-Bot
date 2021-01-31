@@ -9,6 +9,10 @@ export class GreeterBot extends Bot {
 
     clientConnect(event: ClientConnect): void {
         const client = event.client;
+
+        // Server Query Clients
+        if (client.servergroups[0] == '2') return;
+
         if (this._guestGroupHandle) {
             if (client.servergroups.indexOf(this._guestGroupHandle.sgid) >= 0) {
                 return client.message(
