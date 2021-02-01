@@ -5,6 +5,7 @@ import { Bot } from './bot';
 export class TeamBot extends Bot {
     constructor(teamSpeakHandle: TeamSpeak, serverName: string) {
         super(teamSpeakHandle, serverName);
+        console.log('[TeamBot] TeamBot started');
     }
 
     clientMoved(event: ClientMoved): void {
@@ -12,8 +13,12 @@ export class TeamBot extends Bot {
         const channel = event.channel;
 
         // Keine nicht Team Member in Team Channel!
-        if (this._teamGroupHandle && this._tsDefaultChannel) {
-            if (channel.name.includes('Team') && !this.isTeamMember(event.client)) this.moveToDefaultChannel(client);
+        if (!this._teamGroupHandle) return;
+        if (!this._tsDefaultChannel) return;
+
+        if (channel.name.includes('Team') && !this.isTeamMember(event.client)) {
+            console.log(`[TeamBot] ${client.nickname} joined a team channel, but he isn't a team member`);
+            this.moveToDefaultChannel(client);
         }
     }
 }
