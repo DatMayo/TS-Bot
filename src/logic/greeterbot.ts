@@ -1,5 +1,5 @@
 import { TeamSpeak } from 'ts3-nodejs-library';
-import { ClientConnect } from 'ts3-nodejs-library/lib/types/Events';
+import { ClientConnect, ClientDisconnect } from 'ts3-nodejs-library/lib/types/Events';
 import { Bot } from './bot';
 
 export class GreeterBot extends Bot {
@@ -27,5 +27,15 @@ export class GreeterBot extends Bot {
                 );
             }
         }
+    }
+
+    clientDisconnect(event: ClientDisconnect): void {
+        const client = event.client;
+        if (!client) return;
+
+        // Server Query Clients
+        if (client.servergroups[0] == '2') return;
+
+        console.log(`[GreeterBot] User ${client.nickname} disconnected`);
     }
 }
