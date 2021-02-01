@@ -1,6 +1,6 @@
 import { TSExitCode } from '../enums';
 import { TeamSpeak, TeamSpeakChannel, TeamSpeakClient, TeamSpeakServerGroup } from 'ts3-nodejs-library';
-import { ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
+import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 import { Bot } from './bot';
 
 export class SupportBot extends Bot {
@@ -22,6 +22,7 @@ export class SupportBot extends Bot {
                     this._supportGroupHandle = await this._teamSpeakHandle.getServerGroupByName(this._supportGroupName);
                     if (!this._supportGroupHandle) return process.exit(TSExitCode.SupportGroupNotFound);
                     stage = 1;
+                    console.log('[SupportBot] Support group handle added');
                 }
             } catch (err) {
                 if (err.message == 'invalid serverID') return;
@@ -36,6 +37,7 @@ export class SupportBot extends Bot {
                     );
                     if (!this._registrationChannel) return process.exit(TSExitCode.RegistrationChannelNotFound);
                     stage = 2;
+                    console.log('[SupportBot] Registration channel found');
                 }
             } catch (err) {
                 console.log(err);
@@ -54,6 +56,9 @@ export class SupportBot extends Bot {
                         if (idx === -1) this._supportChannelHandle.push(channel);
                     }
                     stage = 3;
+                    console.log(
+                        `[SupportBot] Registered ${this._supportChannelHandle.length}/${this._supportChannelName.length} support channels`,
+                    );
                 }
             } catch (err) {
                 console.log(err);
@@ -74,6 +79,9 @@ export class SupportBot extends Bot {
                         if (idx === -1) this._availableSupporter.push(client);
                     }
                     stage = 4;
+                    console.log(
+                        `[SupportBot] Found ${this._availableSupporter.length} Supporter while staging in progress`,
+                    );
                 }
             } catch (err) {
                 console.log(err);
@@ -88,15 +96,37 @@ export class SupportBot extends Bot {
         }, 5000);
     }
 
+    clientConnect(event: ClientConnect): void {
+        const client = event.client;
+
+        // Server Query Clients
+        if (client.servergroups[0] == '2') return;
+
+        if (!this.isTeamMember(client)) return;
+
+        if (!this._supportGroupHandle) return;
+        if (client.servergroups.indexOf(this._supportGroupHandle.sgid) === -1) return;
+
+        this.doTeamRegistration(client, this._registrationChannel as TeamSpeakChannel, 0);
+    }
     clientDisconnect(event: ClientDisconnect): void {
         if (!event.client) return;
         const client = event.client;
 
-        if (!this._supportGroupHandle) return;
-        const isOnStandby = client.servergroups.indexOf(this._supportGroupHandle.sgid) >= 0;
+        // Server Query Clients
+        if (client.servergroups[0] == '2') return;
 
         if (!this.isTeamMember(client)) return;
-        if (isOnStandby) this.doTeamRegistration(client, this._registrationChannel as TeamSpeakChannel);
+
+        if (!this._supportGroupHandle) return;
+        if (client.servergroups.indexOf(this._supportGroupHandle.sgid) === -1) {
+            // For some weired reason, sometimes client.servergroups differ 1 group
+            const idx = this._availableSupporter.indexOf(client);
+            if (idx !== -1) this._availableSupporter.splice(idx, 1);
+            return;
+        }
+
+        this.doTeamRegistration(client, this._registrationChannel as TeamSpeakChannel, 0);
     }
 
     clientMoved(event: ClientMoved): void {
@@ -124,48 +154,62 @@ export class SupportBot extends Bot {
 
         // Keine TP nach 30 Sekunden
         setTimeout(async () => {
-            if (!client) return;
-            if (client.cid !== channel.cid) return;
+            try {
+                if (!client) return;
+                if (client.cid !== channel.cid) return;
 
-            const info = await client.getInfo();
-            if (!info.clientTalkRequest)
-                client.message(
-                    'Bitte gib einen Grund an, weswegen du mit uns sprechen möchtest. Andernfalls können wir dir nicht helfen.',
-                );
+                const info = await client.getInfo();
+                if (!info.clientTalkRequest)
+                    client.message(
+                        'Bitte gib einen Grund an, weswegen du mit uns sprechen möchtest. Andernfalls können wir dir nicht helfen.',
+                    );
+            } catch (ex) {
+                console.log(ex.message);
+            }
         }, 30000);
 
         // Keine TP nach 90 Sekunden
         setTimeout(async () => {
-            if (!client) return;
-            if (client.cid !== channel.cid) return;
+            try {
+                if (!client) return;
+                if (client.cid !== channel.cid) return;
 
-            const info = await client.getInfo();
-            if (!info.clientTalkRequest)
-                client.message(
-                    'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
-                );
+                const info = await client.getInfo();
+                if (!info.clientTalkRequest)
+                    client.message(
+                        'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
+                    );
+            } catch (ex) {
+                console.log(ex.message);
+            }
             this.moveToDefaultChannel(client);
         }, 90000);
     }
-    doTeamRegistration(client: TeamSpeakClient, channel: TeamSpeakChannel): void {
+    doTeamRegistration(client: TeamSpeakClient, channel: TeamSpeakChannel, timeout = 2000): void {
         if (channel !== this._registrationChannel) return;
-
         if (!this._supportGroupHandle) return;
+
         const isOnStandby = client.servergroups.indexOf(this._supportGroupHandle.sgid) >= 0;
 
         if (!isOnStandby) {
-            client.addGroups(this._supportGroupHandle);
+            client.addGroups(this._supportGroupHandle).catch((err) => {
+                console.error(`Could not add ${client.nickname} to ${this._supportGroupHandle?.name} group.`);
+                console.error(`Thrown error was: ${err.message}`);
+            });
             client.message('Du bist nun als Supporter in Bereitschaft registiert');
 
             const idx = this._availableSupporter.indexOf(client);
             if (idx !== -1) this._availableSupporter.push(client);
         } else {
-            client.delGroups(this._supportGroupHandle);
+            client.delGroups(this._supportGroupHandle).catch((err) => {
+                console.error(`Could not remove group ${this._supportGroupHandle?.name} for user ${client.nickname}.`);
+                console.error(`Thrown error was: ${err.message}`);
+            });
             const idx = this._availableSupporter.indexOf(client);
             if (idx !== -1) this._availableSupporter.splice(idx, 1);
             client.message('Du bist nun nicht mehr als Supporter in Bereitschaft registiert');
         }
-        setTimeout(() => this.moveToDefaultChannel(client), 2000);
+        if (timeout > 0) setTimeout(() => this.moveToDefaultChannel(client), timeout);
         return;
     }
 }
