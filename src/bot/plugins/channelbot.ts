@@ -8,83 +8,54 @@ interface IChannelDefinition {
     upperChannel: string;
 }
 export class ChannelBot {
-    private _managedChannel: IChannelDefinition[] = [
+    private _managedChannels: IChannelDefinition[] = [
         { pattern: 'Team #', upperChannel: 'Team-Talk' },
         { pattern: 'Support #', upperChannel: 'Support' },
     ];
-    private _managedChannelHandle: TeamSpeakChannel[] = [];
     private _teamSpeakHandle: TeamSpeak | undefined;
     constructor(bot: Bot) {
         console.log('[ChannelBot] Staging started, please wait');
-        this.init(bot).then(() => console.log('[ChannelBot] Staging complete, ChannelBot ready'));
+        this._teamSpeakHandle = bot.teamSpeakHandle;
+        bot.onClientMoved(this.refreshChannels.bind(this));
+        this.refreshChannels().then(() => console.log('[ChannelBot] Staging complete, ChannelBot ready'));
     }
 
-    private async init(bot: Bot) {
-        this._teamSpeakHandle = await (await bot.getDefaultChannel()).getParent();
-        for (const currentManangedChannel of this._managedChannel) {
-            const channelList: TeamSpeakChannel[] | undefined = await this._teamSpeakHandle.channelList();
-            const channelHandle = channelList.filter((channel) =>
-                channel.name.startsWith(currentManangedChannel.pattern),
-            );
-
-            if (!channelHandle) return;
-            for (const channel of channelHandle) this._managedChannelHandle.push(channel);
-        }
-
-        for (const autoChannelName of this._managedChannel) {
-            const channel = this._managedChannelHandle
-                .filter((channel) => channel.name.startsWith(autoChannelName.pattern))
-                .reverse();
-            let previusLoopChannel: TeamSpeakChannel | undefined = undefined;
-            for (const currentChannel of channel) {
-                const clientCount = await currentChannel.getClients();
-
-                if (clientCount.length > 0) continue;
-
-                if (previusLoopChannel) {
-                    console.log(`[ChannelBot] Found unused ${previusLoopChannel.name} channel, deleting`);
-                    previusLoopChannel.del();
-
-                    // ToDo, delete ^ channel on this._managedChannelHandle
+    private async refreshChannels() {
+        if (!this._teamSpeakHandle) return;
+        const channelList: TeamSpeakChannel[] | undefined = await this._teamSpeakHandle.channelList();
+        for (const manangedChannel of this._managedChannels) {
+            const channelToRenameHandles: TeamSpeakChannel[] = [];
+            const channelHandles = channelList.filter((channel) => channel.name.startsWith(manangedChannel.pattern));
+            if (!channelHandles) continue;
+            for (let i = 0; i < channelHandles.length; i++) {
+                (await channelHandles[i].getClients()).length === 0 && i < channelHandles.length - 1
+                    ? await channelHandles[i].del()
+                    : channelToRenameHandles.push(channelHandles[i]);
+            }
+            for (let i = 0; i < channelToRenameHandles.length; i++) {
+                const channelName = `${manangedChannel.pattern}${i + 1}`;
+                if (channelToRenameHandles[i].name !== channelName) {
+                    await this._teamSpeakHandle.channelEdit(channelToRenameHandles[i], { channelName });
                 }
-                previusLoopChannel = currentChannel;
+            }
+            const lastChannel = channelToRenameHandles[channelToRenameHandles.length - 1];
+            if ((await lastChannel.getClients()).length > 0) {
+                const upperChannel = await this._teamSpeakHandle.getChannelByName(manangedChannel.upperChannel);
+                if (!upperChannel) continue;
+                await this._teamSpeakHandle.channelCreate(
+                    `${manangedChannel.pattern}${channelToRenameHandles.length + 1}`,
+                    {
+                        channelFlagPermanent: true,
+                        cpid: upperChannel.cid,
+                    },
+                );
             }
         }
-        bot.onClientMoved(this.clientMoved.bind(this));
     }
 
     async clientMoved(event: ClientMoved): Promise<void> {
-        const channel = event.channel;
-
-        if (!this._teamSpeakHandle) return;
-
-        const filteredChannel = this._managedChannel.find((item) => channel.name.startsWith(item.pattern));
-        if (!filteredChannel) return;
-
-        const filteredChannelHandle = this._managedChannelHandle.filter((item) =>
-            item.name.startsWith(filteredChannel.pattern),
-        );
-        let createNewChannel = true;
-        const channelList = await this._teamSpeakHandle.channelList();
-        const upperChannel = channelList.find((item) => item.name == filteredChannel.upperChannel);
-        if (!upperChannel) return;
-
-        for (const currentChannel of filteredChannelHandle) {
-            const clientCount = await currentChannel.getClients();
-            if (clientCount.length === 0) createNewChannel = false;
+        if (this._managedChannels.find((item) => event.channel.name.startsWith(item.pattern))) {
+            await this.refreshChannels();
         }
-
-        if (!createNewChannel) return;
-        const newChannel = await this._teamSpeakHandle.channelCreate(
-            `${filteredChannel.pattern}${filteredChannelHandle.length + 1}`,
-            {
-                channelFlagPermanent: true,
-                cpid: upperChannel.cid,
-            },
-        );
-
-        this._managedChannelHandle.push(newChannel);
-
-        return;
     }
 }

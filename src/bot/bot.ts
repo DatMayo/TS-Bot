@@ -3,35 +3,45 @@ import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library
 import { TSExitCode } from '../enums';
 
 export class Bot {
-    private _teamSpeak: TeamSpeak;
+    private _teamSpeakHandle: TeamSpeak;
     public constructor(teamSpeakHandle: TeamSpeak) {
-        this._teamSpeak = teamSpeakHandle;
-        this._teamSpeak.on('ready', this.init.bind(this));
+        this._teamSpeakHandle = teamSpeakHandle;
+        this._teamSpeakHandle.on('ready', this.init.bind(this));
     }
+
+    get teamSpeakHandle(): TeamSpeak {
+        return this._teamSpeakHandle;
+    }
+
     private async init() {
-        if (!this._teamSpeak.config.serverport) return;
-        await this._teamSpeak.useByPort(this._teamSpeak.config.serverport, this._teamSpeak.config.nickname);
+        if (!this._teamSpeakHandle.config.serverport) return;
+        await this._teamSpeakHandle.useByPort(
+            this._teamSpeakHandle.config.serverport,
+            this._teamSpeakHandle.config.nickname,
+        );
     }
+
     public async getDefaultChannel(): Promise<TeamSpeakChannel> {
-        const defaultChannel = (await this._teamSpeak.channelList()).find((item) => item.flagDefault === true);
+        const defaultChannel = (await this._teamSpeakHandle.channelList()).find((item) => item.flagDefault === true);
         if (!defaultChannel) return process.exit(TSExitCode.ChannelNotFound);
         return defaultChannel;
     }
+
     public async getGroupByName(name: string): Promise<TeamSpeakServerGroup> {
-        const group = await this._teamSpeak.getServerGroupByName(name);
+        const group = await this._teamSpeakHandle.getServerGroupByName(name);
         if (!group) return process.exit(TSExitCode.GroupNotFound);
         return group;
     }
 
     public onClientConnect(func: (event: ClientConnect) => void): void {
-        this._teamSpeak.on('clientconnect', func);
+        this._teamSpeakHandle.on('clientconnect', func);
     }
 
     public onClientDisconnect(func: (event: ClientDisconnect) => void): void {
-        this._teamSpeak.on('clientdisconnect', func);
+        this._teamSpeakHandle.on('clientdisconnect', func);
     }
 
     public onClientMoved(func: (event: ClientMoved) => void): void {
-        this._teamSpeak.on('clientmoved', func);
+        this._teamSpeakHandle.on('clientmoved', func);
     }
 }
