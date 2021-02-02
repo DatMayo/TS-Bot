@@ -4,12 +4,12 @@ import { timeConverter } from '../utils';
 import { Bot } from '../bot';
 
 export class GreeterBot {
-    private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
+    private _tsGuestGroup: TeamSpeakServerGroup | undefined = undefined;
     constructor(bot: Bot) {
         this.init(bot);
     }
     private async init(bot: Bot) {
-        this._tsTeamGroup = await bot.getGroupByName(process.env.TS_GUEST_GROUP || 'Guest');
+        this._tsGuestGroup = await bot.getGroupByName(process.env.TS_GUEST_GROUP || 'Guest');
         bot.onClientConnect(this.clientConnect.bind(this));
         bot.onClientDisconnect(this.clientDisconnect.bind(this));
         console.log('[GreeterBot] GreeterBot started');
@@ -18,8 +18,8 @@ export class GreeterBot {
         const client = event.client;
         // Server Query Clients
         if (client.type != 0) return;
-        if (this._tsTeamGroup) {
-            if (client.servergroups.indexOf(this._tsTeamGroup.sgid) >= 0) {
+        if (this._tsGuestGroup) {
+            if (client.servergroups.indexOf(this._tsGuestGroup.sgid) >= 0) {
                 console.log(`[GreeterBot] New user ${client.nickname} connected`);
                 return client.message(
                     'Willkommen auf unserem Server, bitte registriere dich auf unserer Homepage https://reloaded-life.de/#/register um weitere Funktionen auf diesem TS freizuschalten',
