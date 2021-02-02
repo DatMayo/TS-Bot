@@ -21,7 +21,7 @@ export class TeamBot {
         if (!this._tsDefaultChannel) return;
         if (!this._tsTeamGroup) return;
 
-        if (channel.name.includes('Team') && client.servergroups) {
+        if (channel.name.includes('Team') && client.servergroups.indexOf(this._tsTeamGroup.sgid) === -1) {
             console.log(`[TeamBot] ${client.nickname} joined a team channel, but he isn't a team member`);
             client.move(this._tsDefaultChannel.cid);
         }
