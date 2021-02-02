@@ -13,13 +13,13 @@ export class Bot {
             (item: TeamSpeakServer) => item.port === this._teamSpeakHandle.config.serverport,
         );
         if (!teamSpeakServerHandle) return process.exit(TSExitCode.VirtualServerNotFound);
-        teamSpeakServerHandle.use(process.env.TS_NICKNAME || 'serveradmin');
-        this._teamSpeakHandle.useBySid(teamSpeakServerHandle.id);
+        await teamSpeakServerHandle.use(process.env.TS_NICKNAME || 'serveradmin');
+        await this._teamSpeakHandle.useBySid(teamSpeakServerHandle.id);
         return;
     }
     public async getDefaultChannel(): Promise<TeamSpeakChannel> {
         const defaultChannel = (await this._teamSpeakHandle.channelList()).find((item) => item.flagDefault === true);
-        if (!defaultChannel) return process.exit(TSExitCode.DefaultChannelNotFound);
+        if (!defaultChannel) return process.exit(TSExitCode.ChannelNotFound);
         return defaultChannel;
     }
     public async getGroupByName(name: string): Promise<TeamSpeakServerGroup> {

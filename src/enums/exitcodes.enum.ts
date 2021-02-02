@@ -1,10 +1,6 @@
 export enum TSExitCode {
     OK,
     VirtualServerNotFound,
-    DefaultChannelNotFound,
+    ChannelNotFound,
     GroupNotFound,
-    TeamGroupNotFound,
-    SupportGroupNotFound,
-    GuestGroupNotFound,
-    RegistrationChannelNotFound,
 }

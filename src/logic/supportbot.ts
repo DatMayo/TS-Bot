@@ -25,7 +25,7 @@ export class SupportBot extends Bot {
         try {
             if (this._currentStage == 0) {
                 this._supportGroupHandle = await this._teamSpeakHandle.getServerGroupByName(this._supportGroupName);
-                if (!this._supportGroupHandle) return process.exit(TSExitCode.SupportGroupNotFound);
+                if (!this._supportGroupHandle) return process.exit(TSExitCode.GroupNotFound);
                 this._currentStage = 1;
                 console.log('[SupportBot] Support group handle added');
             }
@@ -38,7 +38,7 @@ export class SupportBot extends Bot {
         try {
             if (this._currentStage == 1) {
                 this._registrationChannel = await this._teamSpeakHandle.getChannelByName(this._registrationChannelName);
-                if (!this._registrationChannel) return process.exit(TSExitCode.RegistrationChannelNotFound);
+                if (!this._registrationChannel) return process.exit(TSExitCode.ChannelNotFound);
                 this._currentStage = 2;
                 console.log('[SupportBot] Registration channel found');
             }

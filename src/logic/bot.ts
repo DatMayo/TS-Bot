@@ -42,13 +42,13 @@ export class Bot {
         this._teamSpeakHandle.useBySid(teamSpeakServerHandle.id);
 
         this._tsDefaultChannel = (await this._teamSpeakHandle.channelList()).find((item) => item.flagDefault === true);
-        if (!this._tsDefaultChannel) return process.exit(TSExitCode.DefaultChannelNotFound);
+        if (!this._tsDefaultChannel) return process.exit(TSExitCode.ChannelNotFound);
 
         this._teamGroupHandle = await this._teamSpeakHandle.getServerGroupByName(this._teamGroupName);
-        if (!this._teamGroupHandle) return process.exit(TSExitCode.TeamGroupNotFound);
+        if (!this._teamGroupHandle) return process.exit(TSExitCode.GroupNotFound);
 
         this._guestGroupHandle = await this._teamSpeakHandle.getServerGroupByName(this._guestGroupName);
-        if (!this._guestGroupHandle) return process.exit(TSExitCode.GuestGroupNotFound);
+        if (!this._guestGroupHandle) return process.exit(TSExitCode.GroupNotFound);
 
         this._connectionComplete = true;
 
