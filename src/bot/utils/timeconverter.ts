@@ -6,5 +6,6 @@ export function timeConverter(timestamp: number): string {
     const date = a.getDate();
     const hour = a.getHours().toString().padStart(2, '0');
     const min = a.getMinutes().toString().padStart(2, '0');
-    return `${date}. ${month} ${year} um ${hour}:${min} Uhr`;
+    // Der folgende Doppelpunkt ist das Unicodezeichen U+A789 und kein normaler Doppelpunkt. Dies dient dazu TS Smileys zu unterdrücken.
+    return `${date}. ${month} ${year} um ${hour}꞉${min} Uhr`;
 }
