@@ -1,7 +1,7 @@
 import { TeamSpeakServerGroup } from 'ts3-nodejs-library';
 import { ClientConnect, ClientDisconnect } from 'ts3-nodejs-library/lib/types/Events';
 import { timeConverter } from '../utils';
-import { Bot } from '../bot';
+import { Bot } from '..';
 
 export class GreeterBot {
     private _tsGuestGroup: TeamSpeakServerGroup | undefined = undefined;
