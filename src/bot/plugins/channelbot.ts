@@ -17,6 +17,8 @@ export class ChannelBot {
         console.log('[ChannelBot] Staging started, please wait');
         this._teamSpeakHandle = bot.teamSpeakHandle;
         bot.onClientMoved(this.refreshChannels.bind(this));
+        bot.onClientConnect(this.refreshChannels.bind(this));
+        bot.onClientDisconnect(this.refreshChannels.bind(this));
         this.refreshChannels().then(() => console.log('[ChannelBot] Staging complete, ChannelBot ready'));
     }
 
