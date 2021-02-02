@@ -11,89 +11,91 @@ export class SupportBot extends Bot {
     private _registrationChannel: TeamSpeakChannel | undefined;
     private _registrationChannelName: string = process.env.TS_REGISTRATION_CHANNEL || 'crash';
     private _availableSupporter: TeamSpeakClient[] = [];
+    private _stageCheck: NodeJS.Timeout;
+
+    private _currentStage = 0;
     constructor(teamSpeakHandle: TeamSpeak, serverName: string) {
         super(teamSpeakHandle, serverName);
         console.log('[SupportBot] Staging started, please wait');
-        let stage = 0;
-        const check = setInterval(async () => {
-            // Load support group
-            try {
-                if (stage == 0) {
-                    this._supportGroupHandle = await this._teamSpeakHandle.getServerGroupByName(this._supportGroupName);
-                    if (!this._supportGroupHandle) return process.exit(TSExitCode.SupportGroupNotFound);
-                    stage = 1;
-                    console.log('[SupportBot] Support group handle added');
+        this._stageCheck = setInterval(this.startStagingProcess.bind(this), 5000);
+    }
+
+    private async startStagingProcess(): Promise<void> {
+        // Load support group
+        try {
+            if (this._currentStage == 0) {
+                this._supportGroupHandle = await this._teamSpeakHandle.getServerGroupByName(this._supportGroupName);
+                if (!this._supportGroupHandle) return process.exit(TSExitCode.SupportGroupNotFound);
+                this._currentStage = 1;
+                console.log('[SupportBot] Support group handle added');
+            }
+        } catch (err) {
+            if (err.message == 'invalid serverID') return;
+            else console.log(err);
+        }
+
+        // Load registration group
+        try {
+            if (this._currentStage == 1) {
+                this._registrationChannel = await this._teamSpeakHandle.getChannelByName(this._registrationChannelName);
+                if (!this._registrationChannel) return process.exit(TSExitCode.RegistrationChannelNotFound);
+                this._currentStage = 2;
+                console.log('[SupportBot] Registration channel found');
+            }
+        } catch (err) {
+            console.log(err);
+        }
+
+        // Load support channel
+        try {
+            if (this._currentStage == 2) {
+                this._supportChannelHandle = [];
+                for (const supportChannel of this._supportChannelName) {
+                    const channel = await this._teamSpeakHandle.getChannelByName(supportChannel);
+                    if (!channel) continue;
+
+                    //Bug ?
+                    const idx = this._supportChannelHandle.indexOf(channel);
+                    if (idx === -1) this._supportChannelHandle.push(channel);
                 }
-            } catch (err) {
-                if (err.message == 'invalid serverID') return;
-                else console.log(err);
+                this._currentStage = 3;
+                console.log(
+                    `[SupportBot] Registered ${this._supportChannelHandle.length}/${this._supportChannelName.length} support channels`,
+                );
             }
+        } catch (err) {
+            console.log(err);
+        }
 
-            // Load registration group
-            try {
-                if (stage == 1) {
-                    this._registrationChannel = await this._teamSpeakHandle.getChannelByName(
-                        this._registrationChannelName,
-                    );
-                    if (!this._registrationChannel) return process.exit(TSExitCode.RegistrationChannelNotFound);
-                    stage = 2;
-                    console.log('[SupportBot] Registration channel found');
+        // Load current connected supporter
+        try {
+            if (this._currentStage == 3) {
+                this._availableSupporter = [];
+                const clientList = await this._teamSpeakHandle.clientList();
+                for (const client of clientList) {
+                    if (!this.isTeamMember(client)) continue;
+                    if (!this._supportGroupHandle) continue;
+                    if (client.servergroups.indexOf(this._supportGroupHandle.sgid) === -1) continue;
+
+                    //Bug ?
+                    const idx = this._availableSupporter.indexOf(client);
+                    if (idx === -1) this._availableSupporter.push(client);
                 }
-            } catch (err) {
-                console.log(err);
+                this._currentStage = 4;
+                console.log(
+                    `[SupportBot] Found ${this._availableSupporter.length} Supporter while staging in progress`,
+                );
             }
+        } catch (err) {
+            console.log(err);
+        }
 
-            // Load support channel
-            try {
-                if (stage == 2) {
-                    this._supportChannelHandle = [];
-                    for (const supportChannel of this._supportChannelName) {
-                        const channel = await this._teamSpeakHandle.getChannelByName(supportChannel);
-                        if (!channel) continue;
+        if (this._currentStage == 4) {
+            console.log('[SupportBot] Staging complete, Supportbot ready');
 
-                        //Bug ?
-                        const idx = this._supportChannelHandle.indexOf(channel);
-                        if (idx === -1) this._supportChannelHandle.push(channel);
-                    }
-                    stage = 3;
-                    console.log(
-                        `[SupportBot] Registered ${this._supportChannelHandle.length}/${this._supportChannelName.length} support channels`,
-                    );
-                }
-            } catch (err) {
-                console.log(err);
-            }
-
-            // Load current connected supporter
-            try {
-                if (stage == 3) {
-                    this._availableSupporter = [];
-                    const clientList = await this._teamSpeakHandle.clientList();
-                    for (const client of clientList) {
-                        if (!this.isTeamMember(client)) continue;
-                        if (!this._supportGroupHandle) continue;
-                        if (client.servergroups.indexOf(this._supportGroupHandle.sgid) === -1) continue;
-
-                        //Bug ?
-                        const idx = this._availableSupporter.indexOf(client);
-                        if (idx === -1) this._availableSupporter.push(client);
-                    }
-                    stage = 4;
-                    console.log(
-                        `[SupportBot] Found ${this._availableSupporter.length} Supporter while staging in progress`,
-                    );
-                }
-            } catch (err) {
-                console.log(err);
-            }
-
-            if (stage == 4) {
-                console.log('[SupportBot] Staging complete, Supportbot ready');
-
-                clearInterval(check);
-            }
-            return;
-        }, 5000);
+            clearInterval(this._stageCheck);
+        }
+        return;
     }
 
     clientConnect(event: ClientConnect): void {
