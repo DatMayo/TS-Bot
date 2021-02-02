@@ -1,5 +1,5 @@
 import { TeamSpeak } from 'ts3-nodejs-library';
-import { GreeterBot, SupportBot, TeamBot } from './logic';
+import { ChannelBot, GreeterBot, SupportBot, TeamBot } from './logic';
 
 const teamspeak = new TeamSpeak({
     host: process.env.TS_HOST || '127.0.0.1',
@@ -9,6 +9,8 @@ const teamspeak = new TeamSpeak({
 });
 
 const serverName = 'Mayos & Polles Testserver';
+
+new ChannelBot(teamspeak, serverName);
 new GreeterBot(teamspeak, serverName);
 new TeamBot(teamspeak, serverName);
 new SupportBot(teamspeak, serverName);
