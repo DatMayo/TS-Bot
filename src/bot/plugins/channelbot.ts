@@ -21,7 +21,6 @@ export class ChannelBot {
 
     private async init(bot: Bot) {
         this._teamSpeakHandle = await (await bot.getDefaultChannel()).getParent();
-        console.log(this._teamSpeakHandle);
         for (const currentManangedChannel of this._managedChannel) {
             const channelList: TeamSpeakChannel[] | undefined = await this._teamSpeakHandle.channelList();
             const channelHandle = channelList.filter((channel) =>
@@ -29,10 +28,7 @@ export class ChannelBot {
             );
 
             if (!channelHandle) return;
-            for (const channel of channelHandle) {
-                const idx = this._managedChannelHandle.indexOf(channel);
-                if (idx === -1) this._managedChannelHandle.push(channel);
-            }
+            for (const channel of channelHandle) this._managedChannelHandle.push(channel);
         }
 
         for (const autoChannelName of this._managedChannel) {
@@ -48,10 +44,13 @@ export class ChannelBot {
                 if (previusLoopChannel) {
                     console.log(`[ChannelBot] Found unused ${previusLoopChannel.name} channel, deleting`);
                     previusLoopChannel.del();
+
+                    // ToDo, delete ^ channel on this._managedChannelHandle
                 }
                 previusLoopChannel = currentChannel;
             }
         }
+        bot.onClientMoved(this.clientMoved.bind(this));
     }
 
     async clientMoved(event: ClientMoved): Promise<void> {
@@ -76,11 +75,15 @@ export class ChannelBot {
         }
 
         if (!createNewChannel) return;
+        const newChannel = await this._teamSpeakHandle.channelCreate(
+            `${filteredChannel.pattern}${filteredChannelHandle.length + 1}`,
+            {
+                channelFlagPermanent: true,
+                cpid: upperChannel.cid,
+            },
+        );
 
-        await this._teamSpeakHandle.channelCreate(`${filteredChannel.pattern}${filteredChannelHandle.length + 1}`, {
-            channelFlagPermanent: true,
-            cpid: upperChannel.cid,
-        });
+        this._managedChannelHandle.push(newChannel);
 
         return;
     }
