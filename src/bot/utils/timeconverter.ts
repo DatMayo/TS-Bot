@@ -4,9 +4,7 @@ export function timeConverter(timestamp: number): string {
     const year = a.getFullYear();
     const month = months[a.getMonth()];
     const date = a.getDate();
-    const hour = a.getHours();
-    const min = a.getMinutes();
-    const sec = a.getSeconds();
-    const time = date + ' ' + month + '. ' + year + ' ' + hour + ':' + min + ':' + sec;
-    return time;
+    const hour = a.getHours().toString().padStart(2, '0');
+    const min = a.getMinutes().toString().padStart(2, '0');
+    return `${date}. ${month} ${year} um ${hour}:${min} Uhr`;
 }
