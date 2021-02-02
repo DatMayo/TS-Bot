@@ -10,7 +10,7 @@ export class Bot {
     }
     private async init() {
         if (!this._teamSpeak.config.serverport) return;
-        await this._teamSpeak.useByPort(this._teamSpeak.config.serverport, process.env.TS_NICKNAME || 'serveradmin');
+        await this._teamSpeak.useByPort(this._teamSpeak.config.serverport, this._teamSpeak.config.nickname);
     }
     public async getDefaultChannel(): Promise<TeamSpeakChannel> {
         const defaultChannel = (await this._teamSpeak.channelList()).find((item) => item.flagDefault === true);

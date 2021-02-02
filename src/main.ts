@@ -9,6 +9,7 @@ const teamspeak = new TeamSpeak({
     serverport: parseInt(process.env.TS_SERVERPORT || '9987'),
     queryport: parseInt(process.env.TS_QUERYPORT || '10011'),
     username: process.env.TS_USERNAME || 'serveradmin',
+    nickname: process.env.TS_NICKNAME || 'serveradmin',
     password: process.env.TS_PASSWORD || 'secret',
 });
 
