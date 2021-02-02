@@ -12,6 +12,7 @@ export class TeamBot {
         this._tsDefaultChannel = await bot.getDefaultChannel();
         this._tsTeamGroup = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
         bot.onClientMoved(this.clientMoved.bind(this));
+        console.log('[TeamBot] TeamBot started');
     }
     private clientMoved(event: ClientMoved): void {
         const client = event.client;

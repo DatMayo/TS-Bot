@@ -1,5 +1,5 @@
 import { TeamSpeak, TeamSpeakServer, TeamSpeakChannel, TeamSpeakServerGroup } from 'ts3-nodejs-library';
-import { ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
+import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 import { TSExitCode } from '../enums';
 
 export class Bot {
@@ -26,6 +26,14 @@ export class Bot {
         const group = await this._teamSpeakHandle.getServerGroupByName(name);
         if (!group) return process.exit(TSExitCode.GroupNotFound);
         return group;
+    }
+
+    public onClientConnect(func: (event: ClientConnect) => void): void {
+        this._teamSpeakHandle.on('clientconnect', func);
+    }
+
+    public onClientDisconnect(func: (event: ClientDisconnect) => void): void {
+        this._teamSpeakHandle.on('clientdisconnect', func);
     }
 
     public onClientMoved(func: (event: ClientMoved) => void): void {
