@@ -6,13 +6,10 @@ import { ClientConnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events'
 
 export class SupportBot {
     private _availableSupporter: TeamSpeakClient[] = [];
-    private _managedSupportChannelNames: string[] = ['Support', 'Termin'];
     private _managedSupportChannelHandles: TeamSpeakChannel[] = [];
     private _teamSpeakHandle: TeamSpeak | undefined;
     private _supportGroupHandle: TeamSpeakServerGroup | undefined;
-    private _supportGroupName: string = process.env.TS_SUPPORT_GROUP || 'Bereitschaft';
     private _registrationChannelHandle: TeamSpeakChannel | undefined;
-    private _registrationChannelName: string = process.env.TS_REGISTRATION_CHANNEL || 'crash';
     private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
     protected _tsDefaultChannel: TeamSpeakChannel | undefined;
 
@@ -29,27 +26,30 @@ export class SupportBot {
     async init(bot: Bot): Promise<void> {
         if (!this._teamSpeakHandle) return;
         this._tsTeamGroup = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
+        const _managedSupportChannelNames: string[] = ['Support', 'Termin'];
+        const _supportGroupName: string = process.env.TS_SUPPORT_GROUP || 'Bereitschaft';
+        const _registrationChannelName: string = process.env.TS_REGISTRATION_CHANNEL || 'An-/Abmeldung';
         if (!this._teamSpeakHandle) return;
         if (!this._tsTeamGroup) return;
 
         // Check if support group exists and hook it
-        this._supportGroupHandle = await this._teamSpeakHandle.getServerGroupByName(this._supportGroupName);
+        this._supportGroupHandle = await this._teamSpeakHandle.getServerGroupByName(_supportGroupName);
         if (!this._supportGroupHandle) return process.exit(TSExitCode.GroupNotFound);
         console.log('[SupportBot] Support group handle added');
 
         // Check if registration channel exists and can be hooked to
-        this._registrationChannelHandle = await this._teamSpeakHandle.getChannelByName(this._registrationChannelName);
+        this._registrationChannelHandle = await this._teamSpeakHandle.getChannelByName(_registrationChannelName);
         if (!this._registrationChannelHandle) return process.exit(TSExitCode.ChannelNotFound);
         console.log('[SupportBot] Registration channel found');
 
         // Load all defined support channels
-        for (const managedSupportChannel of this._managedSupportChannelNames) {
+        for (const managedSupportChannel of _managedSupportChannelNames) {
             const supportChannelHandle = await this._teamSpeakHandle.getChannelByName(managedSupportChannel);
             if (!supportChannelHandle) continue;
             this._managedSupportChannelHandles.push(supportChannelHandle);
         }
         console.log(
-            `[SupportBot] Registered ${this._managedSupportChannelHandles.length}/${this._managedSupportChannelNames.length} support channels`,
+            `[SupportBot] Registered ${this._managedSupportChannelHandles.length}/${_managedSupportChannelNames.length} support channels`,
         );
 
         // Load all current connected supporter
@@ -77,6 +77,9 @@ export class SupportBot {
 
         if (client.servergroups.indexOf(this._tsTeamGroup.sgid) !== -1) {
             await this.removeSupportPermission(client);
+            await client.message(
+                'Hey, du hattest vergessen dir beim letzten mal die Bereitschaftsgruppe zu entfernen. Ich hab das mal für dich gemacht :o)',
+            );
             return;
         }
     }
