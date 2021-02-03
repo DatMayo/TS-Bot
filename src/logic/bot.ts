@@ -8,7 +8,7 @@ import {
     TeamSpeakServerGroup,
 } from 'ts3-nodejs-library';
 import { ClientConnect, ClientDisconnect, ClientMoved, TextMessage } from 'ts3-nodejs-library/lib/types/Events';
-import { TSExitCode } from '../enums';
+import { TSExitCode } from '../bot/utils';
 
 dotenv.config();
 

@@ -1,4 +1,4 @@
-import { TSExitCode } from '../enums';
+import { TSExitCode } from '../bot/utils';
 import { TeamSpeak, TeamSpeakChannel, TeamSpeakClient, TeamSpeakServerGroup } from 'ts3-nodejs-library';
 import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 import { Bot } from './bot';

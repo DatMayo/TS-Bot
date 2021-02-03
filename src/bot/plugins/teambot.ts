@@ -1,6 +1,6 @@
 import { TeamSpeakChannel, TeamSpeakServerGroup } from 'ts3-nodejs-library';
 import { ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
-import { Bot } from '../bot';
+import { Bot } from '..';
 
 export class TeamBot {
     private _tsDefaultChannel: TeamSpeakChannel | undefined = undefined;
