@@ -7,6 +7,11 @@ pipeline {
                 sh 'ncu -e2' 
             }
         }
+        stage('npm clean') { 
+            steps {
+                sh 'npm run clean' 
+            }
+        }
         stage('npm install') { 
             steps {
                 sh 'npm install' 
