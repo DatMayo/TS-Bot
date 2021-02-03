@@ -1,6 +1,6 @@
 import { TeamSpeak } from 'ts3-nodejs-library';
 import { Bot } from './bot';
-import { TeamBot, GreeterBot, ChannelBot } from './bot/plugins';
+import { TeamBot, GreeterBot, ChannelBot, SupportBot } from './bot/plugins';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -16,6 +16,7 @@ const teamspeak = new TeamSpeak({
 const bot = new Bot(teamspeak);
 new ChannelBot(bot);
 new GreeterBot(bot);
+new SupportBot(bot);
 new TeamBot(bot);
 
 //new SupportBot(teamspeak, serverName);
