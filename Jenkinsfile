@@ -15,7 +15,7 @@ pipeline {
         stage('npm run build') { 
             steps {
                 sh 'npm run build'
-                archiveArtifacts artifacts: '**/dist/*.js'
+                archiveArtifacts artifacts: './dist/**/*.js'
             }
         }
     }
