@@ -33,6 +33,12 @@ export class Bot {
         return group;
     }
 
+    public async getChannelByName(name: string): Promise<TeamSpeakChannel> {
+        const channel = await this._teamSpeakHandle.getChannelByName(name);
+        if (!channel) return process.exit(TSExitCode.ChannelNotFound);
+        return channel;
+    }
+
     public onClientConnect(func: (event: ClientConnect) => void): void {
         this._teamSpeakHandle.on('clientconnect', func);
     }
