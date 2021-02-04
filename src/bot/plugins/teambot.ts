@@ -27,7 +27,7 @@ export class TeamBot {
         console.log('[TeamBot] TeamBot started');
     }
     /**
-     * Function which will be invoked onClientMoved event
+     * Function which will be invoked by onClientMoved event
      * @param  {ClientMoved} event ClientMoved event
      */
     private clientMoved(event: ClientMoved): void {
