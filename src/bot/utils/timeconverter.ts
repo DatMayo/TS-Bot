@@ -1,3 +1,7 @@
+/**
+ * Converts timestamp into human readable string
+ * @param {number} timestamp in unixtime
+ */
 export function timeConverter(timestamp: number): string {
     const a = new Date(timestamp * 1000);
     const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
