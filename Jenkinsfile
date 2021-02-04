@@ -4,7 +4,9 @@ pipeline {
     stages {
         stage('ncu') { 
             steps {
-                sh 'ncu -e2' 
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    sh 'ncu -e2'
+                }
             }
         }
         stage('npm clean') { 
