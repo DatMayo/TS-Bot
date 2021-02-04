@@ -203,7 +203,55 @@ export class SupportBot {
         return false;
     }
 
-    private checkSupport(_client: TeamSpeakClient, _channel: TeamSpeakChannel) {
-        // ToDo
+    private async checkSupport(client: TeamSpeakClient, channel: TeamSpeakChannel) {
+        if (client.type != 0) return;
+        if (this._managedSupportChannelHandles.length === 0) return;
+        const foundChannel = this._managedSupportChannelHandles.find((item) => item.cid === channel.cid);
+        if (!foundChannel) return;
+        if (this._availableSupporter.length === 0) {
+            return client.message(
+                'Es ist aktuell kein Supporter im Dienst. Du kannst warten oder gern zu einem späteren Zeitpunkt zurück kommen',
+            );
+        }
+
+        await client.message('Willkommen im Wartebereich,');
+        await client.message('bitte fordere Talkpower an, damit wir dein Anliegen schnellstmöglich bearbeiten können.');
+
+        for (const supporter of this._availableSupporter) {
+            await supporter.message(
+                `[URL=client://${client.clid}/${client.uniqueIdentifier}]${client.nickname}[/URL] wartet in [URL=channelid://${channel.cid}]${channel.name}[/URL], bitte kümmere dich um Ihn, sobald er/sie Talkpower angefordert hat`,
+            );
+        }
+
+        setTimeout(
+            async () => {
+                if (!client) return;
+                if (client.cid !== channel.cid) return;
+                const info = await client.getInfo();
+                if (!info.clientTalkRequest) {
+                    client.message(
+                        'Bitte gib einen Grund an, weswegen du mit uns sprechen möchtest. Andernfalls können wir dir nicht helfen.',
+                    );
+                }
+            },
+            30000,
+            channel,
+        );
+
+        setTimeout(
+            async () => {
+                if (!client) return;
+                if (client.cid !== channel.cid) return;
+                const info = await client.getInfo();
+                if (!info.clientTalkRequest) {
+                    client.message(
+                        'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
+                    );
+                    this.moveToDefaultChannel(client);
+                }
+            },
+            90000,
+            channel,
+        );
     }
 }
