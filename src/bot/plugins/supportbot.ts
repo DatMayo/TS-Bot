@@ -1,77 +1,52 @@
-import { TSExitCode } from '../utils';
 import { TeamSpeakChannel, TeamSpeakClient, TeamSpeakServerGroup } from 'ts3-nodejs-library';
-import { TeamSpeak } from 'ts3-nodejs-library/lib/TeamSpeak';
-import { Bot } from '../bot';
+import { Bot } from '..';
 import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 
 export class SupportBot {
     private _availableSupporter: TeamSpeakClient[] = [];
     private _managedSupportChannelHandles: TeamSpeakChannel[] = [];
-    private _registrationChannelHandle: TeamSpeakChannel | undefined = undefined;
-    private _supportGroupHandle: TeamSpeakServerGroup | undefined = undefined;
-    private _teamSpeakHandle: TeamSpeak | undefined;
     private _tsDefaultChannel: TeamSpeakChannel | undefined = undefined;
-    private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
-
+    private _registerChannelHandle: TeamSpeakChannel | undefined = undefined;
+    private _supportGroupHandle: TeamSpeakServerGroup | undefined = undefined;
+    private _teamGroupHandle: TeamSpeakServerGroup | undefined = undefined;
+    /**
+     * Constructor of SupportBot invoces initialization.
+     * @param {Bot} bot Handle to the main bot
+     */
     constructor(bot: Bot) {
         this.init(bot);
     }
-
+    /**
+     * Initializes SupportBot and sets channels, groups and events.
+     * @param {Bot} bot Handle to the main bot
+     */
     async init(bot: Bot): Promise<void> {
-        console.log('[SupportBot] Staging started, please wait');
-        this._teamSpeakHandle = bot.teamSpeakHandle;
+        console.log('[SupportBot] Initialization started');
+        this._teamGroupHandle = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
+        this._supportGroupHandle = await bot.getGroupByName(process.env.TS_SUPPORT_GROUP || 'Bereitschaft');
+        this._tsDefaultChannel = await bot.getDefaultChannel();
+        this._registerChannelHandle = await bot.getChannelByName(
+            process.env.TS_REGISTRATION_CHANNEL || 'An-/Abmeldung',
+        );
+        for (const managedSupportChannel of ['Support', 'Termin']) {
+            this._managedSupportChannelHandles.push(await bot.getChannelByName(managedSupportChannel));
+        }
+        for (const client of await bot.teamSpeakHandle.clientList()) {
+            if (
+                client.servergroups.indexOf(this._teamGroupHandle.sgid) !== -1 &&
+                client.servergroups.indexOf(this._supportGroupHandle.sgid) !== -1
+            ) {
+                this._availableSupporter.push(client);
+            }
+        }
         bot.onClientMoved(this.clientMoved.bind(this));
         bot.onClientConnect(this.clientConnect.bind(this));
         bot.onClientDisconnect(this.clientDisconnect.bind(this));
-
-        if (!this._teamSpeakHandle) return;
-        this._tsTeamGroup = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
-        const _managedSupportChannelNames: string[] = ['Support', 'Termin'];
-        const _supportGroupName: string = process.env.TS_SUPPORT_GROUP || 'Bereitschaft';
-        const _registrationChannelName: string = process.env.TS_REGISTRATION_CHANNEL || 'An-/Abmeldung';
-        if (!this._teamSpeakHandle) return;
-        if (!this._tsTeamGroup) return;
-
-        // Check if support group exists and hook it
-        this._supportGroupHandle = await this._teamSpeakHandle.getServerGroupByName(_supportGroupName);
-        if (!this._supportGroupHandle) return process.exit(TSExitCode.GroupNotFound);
-        console.log('[SupportBot] Support group handle added');
-
-        // Check if registration channel exists and can be hooked to
-        this._registrationChannelHandle = await this._teamSpeakHandle.getChannelByName(_registrationChannelName);
-        if (!this._registrationChannelHandle) return process.exit(TSExitCode.ChannelNotFound);
-        console.log('[SupportBot] Registration channel found');
-
-        // Load all defined support channels
-        for (const managedSupportChannel of _managedSupportChannelNames) {
-            const supportChannelHandle = await this._teamSpeakHandle.getChannelByName(managedSupportChannel);
-            if (!supportChannelHandle) continue;
-            this._managedSupportChannelHandles.push(supportChannelHandle);
-        }
-        console.log(
-            `[SupportBot] Registered ${this._managedSupportChannelHandles.length}/${_managedSupportChannelNames.length} support channels`,
-        );
-
-        // Load all current connected supporter
-        const clientList = await this._teamSpeakHandle.clientList();
-        for (const client of clientList) {
-            if (client.servergroups.indexOf(this._tsTeamGroup.sgid) === -1) continue;
-            if (!this._supportGroupHandle) continue;
-            if (client.servergroups.indexOf(this._supportGroupHandle.sgid) === -1) continue;
-
-            this._availableSupporter.push(client);
-        }
-        console.log(`[SupportBot] Found ${this._availableSupporter.length} Supporter while staging in progress`);
-
-        // Grab handle of the default channel
-        this._tsDefaultChannel = (await this._teamSpeakHandle.channelList()).find((item) => item.flagDefault === true);
-        if (!this._tsDefaultChannel) return process.exit(TSExitCode.ChannelNotFound);
-        console.log(`[SupportBot] Got handle for the default channel`);
-        console.log('[SupportBot] Staging ended, SupportBot ready');
+        console.log('[SupportBot] Initialization done');
     }
-
+    // TODO --- refactored until here, new refactoring starting here
     private async clientConnect(event: ClientConnect): Promise<void> {
-        if (!this._tsTeamGroup) return;
+        if (!this._teamGroupHandle) return;
         if (!this._supportGroupHandle) return;
 
         const client = event.client;
@@ -89,9 +64,9 @@ export class SupportBot {
     private async clientDisconnect(event: ClientDisconnect): Promise<void> {
         const client = event.client;
         if (!client) return;
-        if (!this._tsTeamGroup) return;
+        if (!this._teamGroupHandle) return;
 
-        if (client.servergroups.indexOf(this._tsTeamGroup.sgid) === -1) return;
+        if (client.servergroups.indexOf(this._teamGroupHandle.sgid) === -1) return;
 
         const idx = this._availableSupporter.indexOf(client);
         if (idx === -1) return;
@@ -107,10 +82,10 @@ export class SupportBot {
         const channel = event.channel;
 
         // if (this._managedSupportChannelHandles.indexOf(channel) === -1) return;
-        if (!this._tsTeamGroup) return;
+        if (!this._teamGroupHandle) return;
         if (!this._supportGroupHandle) return;
-        if (client.servergroups.indexOf(this._tsTeamGroup.sgid) !== -1) {
-            if (channel !== this._registrationChannelHandle) return;
+        if (client.servergroups.indexOf(this._teamGroupHandle.sgid) !== -1) {
+            if (channel !== this._registerChannelHandle) return;
             await this.doTeamRegistration(client);
 
             //Fun Stuff :-D
