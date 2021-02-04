@@ -3,21 +3,21 @@ import { ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 import { Bot } from '..';
 
 /**
- * Teambot plugin for TS Bot.
+ * TeamBot plugin for TS Bot.
  * @param {Bot} bot Handle to the main bot
  */
 export class TeamBot {
     private _tsDefaultChannel: TeamSpeakChannel | undefined = undefined;
     private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
     /**
-     * Constructor of Teambot invoces initialization.
+     * Constructor of TeamBot invoces initialization.
      * @param  {Bot} bot Handle to the main bot
      */
     constructor(bot: Bot) {
         this.init(bot);
     }
     /**
-     * Initializes Teambot and sets channels, groups and events.
+     * Initializes TeamBot and sets channels, groups and events.
      * @param  {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot): Promise<void> {
