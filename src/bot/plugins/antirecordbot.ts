@@ -1,5 +1,5 @@
 import { TeamSpeakClient } from 'ts3-nodejs-library';
-import { Bot } from '../bot';
+import { Bot } from '..';
 import { sleep } from '../utils';
 interface IWarnList {
     uid: string;
