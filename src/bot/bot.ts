@@ -27,16 +27,16 @@ export class Bot {
         return defaultChannel;
     }
 
-    public async getGroupByName(name: string): Promise<TeamSpeakServerGroup> {
-        const group = await this._teamSpeakHandle.getServerGroupByName(name);
-        if (!group) return process.exit(TSExitCode.GroupNotFound);
-        return group;
-    }
-
     public async getChannelByName(name: string): Promise<TeamSpeakChannel> {
         const channel = await this._teamSpeakHandle.getChannelByName(name);
         if (!channel) return process.exit(TSExitCode.ChannelNotFound);
         return channel;
+    }
+
+    public async getGroupByName(name: string): Promise<TeamSpeakServerGroup> {
+        const group = await this._teamSpeakHandle.getServerGroupByName(name);
+        if (!group) return process.exit(TSExitCode.GroupNotFound);
+        return group;
     }
 
     public onClientConnect(func: (event: ClientConnect) => void): void {
