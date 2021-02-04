@@ -3,17 +3,33 @@ import { ClientConnect, ClientDisconnect } from 'ts3-nodejs-library/lib/types/Ev
 import { timeConverter } from '../utils';
 import { Bot } from '..';
 
+/**
+ * Greeterbot plugin for TS Bot.
+ * @param {Bot} bot Handle to the main bot
+ */
 export class GreeterBot {
     private _tsGuestGroup: TeamSpeakServerGroup | undefined = undefined;
+    /**
+     * Constructor of Greeterbot invoces initialization.
+     * @param  {Bot} bot Handle to the main bot
+     */
     constructor(bot: Bot) {
         this.init(bot);
     }
+    /**
+     * Initializes Greeterbot and sets groups and events.
+     * @param  {Bot} bot Handle to the main bot
+     */
     private async init(bot: Bot) {
         this._tsGuestGroup = await bot.getGroupByName(process.env.TS_GUEST_GROUP || 'Guest');
         bot.onClientConnect(this.clientConnect.bind(this));
         bot.onClientDisconnect(this.clientDisconnect.bind(this));
         console.log('[GreeterBot] GreeterBot started');
     }
+    /**
+     * Function which will be invoked by onClientConnect event
+     * @param  {ClientConnect} event ClientConnect event
+     */
     private async clientConnect(event: ClientConnect): Promise<void> {
         const client = event.client;
         // Server Query Clients
@@ -32,11 +48,13 @@ export class GreeterBot {
             }
         }
     }
+    /**
+     * Function which will be invoked by onClientDisconnect event
+     * @param  {ClientDisconnect} event ClientDisconnect event
+     */
     private clientDisconnect(event: ClientDisconnect): void {
         const client = event.client;
-        if (!client) return;
-        // Server Query Clients
-        if (client.type != 0) return;
+        if (!client || client.type != 0) return;
         console.log(`[GreeterBot] User ${client.nickname} disconnected`);
     }
 }
