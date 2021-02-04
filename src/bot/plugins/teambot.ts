@@ -11,14 +11,14 @@ export class TeamBot {
     private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
     /**
      * Constructor of TeamBot invoces initialization.
-     * @param  {Bot} bot Handle to the main bot
+     * @param {Bot} bot Handle to the main bot
      */
     constructor(bot: Bot) {
         this.init(bot);
     }
     /**
      * Initializes TeamBot and sets channels, groups and events.
-     * @param  {Bot} bot Handle to the main bot
+     * @param {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot): Promise<void> {
         console.log('[TeamBot] Initialization started');
@@ -29,7 +29,7 @@ export class TeamBot {
     }
     /**
      * Function which will be invoked by onClientMoved event
-     * @param  {ClientMoved} event ClientMoved event
+     * @param {ClientMoved} event ClientMoved event
      */
     private clientMoved(event: ClientMoved): void {
         const client = event.client;

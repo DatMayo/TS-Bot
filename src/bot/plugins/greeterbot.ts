@@ -11,14 +11,14 @@ export class GreeterBot {
     private _tsGuestGroup: TeamSpeakServerGroup | undefined = undefined;
     /**
      * Constructor of GreeterBot invoces initialization.
-     * @param  {Bot} bot Handle to the main bot
+     * @param {Bot} bot Handle to the main bot
      */
     constructor(bot: Bot) {
         this.init(bot);
     }
     /**
      * Initializes GreeterBot and sets groups and events.
-     * @param  {Bot} bot Handle to the main bot
+     * @param {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot) {
         console.log('[GreeterBot] Initialization started');
@@ -50,7 +50,7 @@ export class GreeterBot {
     }
     /**
      * Function which will be invoked by onClientDisconnect event
-     * @param  {ClientDisconnect} event ClientDisconnect event
+     * @param {ClientDisconnect} event ClientDisconnect event
      */
     private clientDisconnect(event: ClientDisconnect): void {
         const client = event.client;

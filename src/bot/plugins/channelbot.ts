@@ -18,14 +18,14 @@ export class ChannelBot {
     private _teamSpeakHandle: TeamSpeak | undefined;
     /**
      * Constructor of ChannelBot invoces initialization.
-     * @param  {Bot} bot Handle to the main bot
+     * @param {Bot} bot Handle to the main bot
      */
     constructor(bot: Bot) {
         this.init(bot);
     }
     /**
      * Initializes ChannelBot and sets events.
-     * @param  {Bot} bot Handle to the main bot
+     * @param {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot) {
         console.log('[ChannelBot] Initialization started');
