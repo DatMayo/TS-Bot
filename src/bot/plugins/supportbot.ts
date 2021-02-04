@@ -243,7 +243,7 @@ export class SupportBot {
                     );
                 }
             },
-            30000,
+            30 * 1000,
             channel,
         );
 
@@ -259,7 +259,7 @@ export class SupportBot {
                     this.moveToDefaultChannel(client);
                 }
             },
-            90000,
+            2 * 60 * 1000,
             channel,
         );
     }
