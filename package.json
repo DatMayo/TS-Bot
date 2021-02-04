@@ -6,7 +6,8 @@
         "build": "tsc",
         "build:watch": "tsc -w",
         "clean": "git clean -fXd -e \\!node_modules -e \\!node_modules/**/*",
-        "debug": "nodemon ./dist/main.js"
+        "debug": "nodemon ./dist/main.js",
+        "lint": "eslint ."
     },
     "repository": {
         "type": "git",
