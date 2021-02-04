@@ -4,20 +4,20 @@ import { timeConverter } from '../utils';
 import { Bot } from '..';
 
 /**
- * Greeterbot plugin for TS Bot.
+ * GreeterBot plugin for TS Bot.
  * @param {Bot} bot Handle to the main bot
  */
 export class GreeterBot {
     private _tsGuestGroup: TeamSpeakServerGroup | undefined = undefined;
     /**
-     * Constructor of Greeterbot invoces initialization.
+     * Constructor of GreeterBot invoces initialization.
      * @param  {Bot} bot Handle to the main bot
      */
     constructor(bot: Bot) {
         this.init(bot);
     }
     /**
-     * Initializes Greeterbot and sets groups and events.
+     * Initializes GreeterBot and sets groups and events.
      * @param  {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot) {
@@ -32,8 +32,7 @@ export class GreeterBot {
      */
     private async clientConnect(event: ClientConnect): Promise<void> {
         const client = event.client;
-        // Server Query Clients
-        if (client.type != 0) return;
+        if (client.type != 0) return; // Ignore server query clients
         if (this._tsGuestGroup) {
             if (client.servergroups.indexOf(this._tsGuestGroup.sgid) >= 0) {
                 console.log(`[GreeterBot] New user ${client.nickname} connected`);
