@@ -14,16 +14,16 @@ export class SupportBot {
     private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
 
     constructor(bot: Bot) {
+        this.init(bot);
+    }
+
+    async init(bot: Bot): Promise<void> {
         console.log('[SupportBot] Staging started, please wait');
         this._teamSpeakHandle = bot.teamSpeakHandle;
         bot.onClientMoved(this.clientMoved.bind(this));
         bot.onClientConnect(this.clientConnect.bind(this));
         bot.onClientDisconnect(this.clientDisconnect.bind(this));
 
-        this.init(bot).then(() => console.log('[SupportBot] Staging ended, SupportBot ready'));
-    }
-
-    async init(bot: Bot): Promise<void> {
         if (!this._teamSpeakHandle) return;
         this._tsTeamGroup = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
         const _managedSupportChannelNames: string[] = ['Support', 'Termin'];
@@ -67,6 +67,7 @@ export class SupportBot {
         this._tsDefaultChannel = (await this._teamSpeakHandle.channelList()).find((item) => item.flagDefault === true);
         if (!this._tsDefaultChannel) return process.exit(TSExitCode.ChannelNotFound);
         console.log(`[SupportBot] Got handle for the default channel`);
+        console.log('[SupportBot] Staging ended, SupportBot ready');
     }
 
     private async clientConnect(event: ClientConnect): Promise<void> {
