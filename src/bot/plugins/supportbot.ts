@@ -11,7 +11,7 @@ export class SupportBot {
     private _supportGroupHandle: TeamSpeakServerGroup | undefined;
     private _registrationChannelHandle: TeamSpeakChannel | undefined;
     private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
-    protected _tsDefaultChannel: TeamSpeakChannel | undefined;
+    private _tsDefaultChannel: TeamSpeakChannel | undefined;
 
     constructor(bot: Bot) {
         console.log('[SupportBot] Staging started, please wait');
