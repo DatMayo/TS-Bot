@@ -15,7 +15,7 @@ export class SupportBot {
 
     constructor(bot: Bot) {
         console.log('[SupportBot] Staging started, please wait');
-        this, (this._teamSpeakHandle = bot.teamSpeakHandle);
+        this._teamSpeakHandle = bot.teamSpeakHandle;
         bot.onClientMoved(this.clientMoved.bind(this));
         bot.onClientConnect(this.clientConnect.bind(this));
         bot.onClientDisconnect(this.clientDisconnect.bind(this));
@@ -71,11 +71,12 @@ export class SupportBot {
 
     private async clientConnect(event: ClientConnect): Promise<void> {
         if (!this._tsTeamGroup) return;
+        if (!this._supportGroupHandle) return;
 
         const client = event.client;
         if (client.servergroups[0] == '2') return;
 
-        if (client.servergroups.indexOf(this._tsTeamGroup.sgid) !== -1) {
+        if (client.servergroups.indexOf(this._supportGroupHandle.sgid) !== -1) {
             await this.removeSupportPermission(client);
             await client.message(
                 'Hey, du hattest vergessen dir beim letzten mal die Bereitschaftsgruppe zu entfernen. Ich hab das mal für dich gemacht :o)',
@@ -141,6 +142,7 @@ export class SupportBot {
         console.log(`[SupportBot] ${client.nickname} is now on standby`);
         return true;
     }
+
     /**
      * Toggles the registration channel
      * @param  {TeamSpeakClient} client Handle to client
@@ -167,6 +169,7 @@ export class SupportBot {
         if (!this._supportGroupHandle) return false;
         return client.servergroups.indexOf(this._supportGroupHandle?.sgid) >= 0;
     }
+
     /**
      * Kicks a user to the default channel
      * @param  {TeamSpeakClient} client Handle to client
@@ -176,6 +179,7 @@ export class SupportBot {
         client.kickFromChannel('( ಠ◡ಠ ) Evil james has kicked you');
         return;
     }
+
     /**
      * Moves a user to the default channel
      * @param  {TeamSpeakClient} client Handle to client
@@ -203,6 +207,11 @@ export class SupportBot {
         return false;
     }
 
+    /**
+     * Checks for available support options
+     * @param  {TeamSpeakClient} client Handle to client
+     * @param  {TeamSpeakChannel} channel Handle to client channel
+     */
     private async checkSupport(client: TeamSpeakClient, channel: TeamSpeakChannel) {
         if (client.type != 0) return;
         if (this._managedSupportChannelHandles.length === 0) return;
