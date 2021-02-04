@@ -28,13 +28,13 @@ export class ChannelBot {
      * @param  {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot) {
-        console.log('[ChannelBot] Staging started, please wait');
+        console.log('[ChannelBot] Initialization started');
         this._teamSpeakHandle = bot.teamSpeakHandle;
         bot.onClientMoved(this.refreshChannels.bind(this));
         bot.onClientConnect(this.refreshChannels.bind(this));
         bot.onClientDisconnect(this.refreshChannels.bind(this));
         await this.refreshChannels();
-        console.log('[ChannelBot] Staging complete, ChannelBot ready');
+        console.log('[ChannelBot] Initialization done');
     }
     /**
      * Function which will be invoked by onClientMoved, onClientConnect and onClientDisconnect event.

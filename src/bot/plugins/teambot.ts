@@ -21,10 +21,11 @@ export class TeamBot {
      * @param  {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot): Promise<void> {
+        console.log('[TeamBot] Initialization started');
         this._tsDefaultChannel = await bot.getDefaultChannel();
         this._tsTeamGroup = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
         bot.onClientMoved(this.clientMoved.bind(this));
-        console.log('[TeamBot] TeamBot started');
+        console.log('[TeamBot] Initialization done');
     }
     /**
      * Function which will be invoked by onClientMoved event

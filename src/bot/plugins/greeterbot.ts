@@ -21,10 +21,11 @@ export class GreeterBot {
      * @param  {Bot} bot Handle to the main bot
      */
     private async init(bot: Bot) {
+        console.log('[GreeterBot] Initialization started');
         this._tsGuestGroup = await bot.getGroupByName(process.env.TS_GUEST_GROUP || 'Guest');
         bot.onClientConnect(this.clientConnect.bind(this));
         bot.onClientDisconnect(this.clientDisconnect.bind(this));
-        console.log('[GreeterBot] GreeterBot started');
+        console.log('[GreeterBot] Initialization done');
     }
     /**
      * Function which will be invoked by onClientConnect event
