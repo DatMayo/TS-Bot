@@ -5,13 +5,13 @@ import { Bot } from '../bot';
 import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 
 export class SupportBot {
+    private _teamSpeakHandle: TeamSpeak | undefined;
     private _availableSupporter: TeamSpeakClient[] = [];
     private _managedSupportChannelHandles: TeamSpeakChannel[] = [];
-    private _teamSpeakHandle: TeamSpeak | undefined;
-    private _supportGroupHandle: TeamSpeakServerGroup | undefined;
-    private _registrationChannelHandle: TeamSpeakChannel | undefined;
+    private _registrationChannelHandle: TeamSpeakChannel | undefined = undefined;
+    private _tsDefaultChannel: TeamSpeakChannel | undefined = undefined;
+    private _supportGroupHandle: TeamSpeakServerGroup | undefined = undefined;
     private _tsTeamGroup: TeamSpeakServerGroup | undefined = undefined;
-    private _tsDefaultChannel: TeamSpeakChannel | undefined;
 
     constructor(bot: Bot) {
         console.log('[SupportBot] Staging started, please wait');
