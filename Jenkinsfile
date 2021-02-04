@@ -12,6 +12,11 @@ pipeline {
                 sh 'npm run clean' 
             }
         }
+        stage('npm lint') { 
+            steps {
+                sh 'npm run lint' 
+            }
+        }
         stage('npm install') { 
             steps {
                 sh 'npm install' 
