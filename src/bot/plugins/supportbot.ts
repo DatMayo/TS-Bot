@@ -2,7 +2,7 @@ import { TSExitCode } from '../utils';
 import { TeamSpeakChannel, TeamSpeakClient, TeamSpeakServerGroup } from 'ts3-nodejs-library';
 import { TeamSpeak } from 'ts3-nodejs-library/lib/TeamSpeak';
 import { Bot } from '../bot';
-import { ClientConnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
+import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 
 export class SupportBot {
     private _availableSupporter: TeamSpeakClient[] = [];
@@ -18,7 +18,7 @@ export class SupportBot {
         this, (this._teamSpeakHandle = bot.teamSpeakHandle);
         bot.onClientMoved(this.clientMoved.bind(this));
         bot.onClientConnect(this.clientConnect.bind(this));
-        bot.onClientDisconnect(this.checkSupport.bind(this));
+        bot.onClientDisconnect(this.clientDisconnect.bind(this));
 
         this.init(bot).then(() => console.log('[SupportBot] Staging ended, SupportBot ready'));
     }
@@ -84,6 +84,22 @@ export class SupportBot {
         }
     }
 
+    private async clientDisconnect(event: ClientDisconnect): Promise<void> {
+        const client = event.client;
+        if (!client) return;
+        if (!this._tsTeamGroup) return;
+
+        if (client.servergroups.indexOf(this._tsTeamGroup.sgid) === -1) return;
+
+        const idx = this._availableSupporter.indexOf(client);
+        if (idx === -1) return;
+        this._availableSupporter.splice(idx);
+        console.log(
+            `[SupportBot] ${client.nickname} was registered as supporter on standby, I removed him because he disconnected.`,
+        );
+        console.log(`[SupportBot] There are/is now a total of ${this._availableSupporter.length} supporter on standby`);
+    }
+
     private async clientMoved(event: ClientMoved): Promise<void> {
         const client = event.client;
         const channel = event.channel;
@@ -102,9 +118,11 @@ export class SupportBot {
             } else {
                 await this.kickToDefaultChannel(client);
             }
+            console.log(
+                `[SupportBot] There are/is now a total of ${this._availableSupporter.length} supporter on standby`,
+            );
         } else {
-            // ToDo
-            // doUserSupport(client, channel);
+            this.checkSupport(client, channel);
         }
     }
 
@@ -120,6 +138,7 @@ export class SupportBot {
             console.error(`Could not add group ${this._supportGroupHandle?.name} to user ${client.nickname}.`);
             console.error(`Thrown error was: ${err.message}`);
         });
+        console.log(`[SupportBot] ${client.nickname} is now on standby`);
         return true;
     }
     /**
@@ -130,8 +149,11 @@ export class SupportBot {
     private async doTeamRegistration(client: TeamSpeakClient): Promise<void> {
         if (this.hasSupportPermission(client)) {
             await this.removeSupportPermission(client);
+            const idx = this._availableSupporter.indexOf(client);
+            if (idx !== -1) this._availableSupporter.splice(idx);
         } else {
             await this.addSupportPermission(client);
+            this._availableSupporter.push(client);
         }
     }
 
@@ -176,11 +198,12 @@ export class SupportBot {
         await client.delGroups(this._supportGroupHandle).catch((err) => {
             console.error(`Could not remove group ${this._supportGroupHandle?.name} for user ${client.nickname}.`);
             console.error(`Thrown error was: ${err.message}`);
+            console.log(`[SupportBot] ${client.nickname} is not on on standby anymore`);
         });
         return false;
     }
 
-    private checkSupport() {
+    private checkSupport(_client: TeamSpeakClient, _channel: TeamSpeakChannel) {
         // ToDo
     }
 }
