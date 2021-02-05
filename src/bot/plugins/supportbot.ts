@@ -143,7 +143,7 @@ export class SupportBot {
      */
     private hasSupportPermission(client: TeamSpeakClient): boolean {
         if (!this._supportGroupHandle) return false;
-        return client.servergroups.indexOf(this._supportGroupHandle?.sgid) >= 0;
+        return client.servergroups.indexOf(this._supportGroupHandle.sgid) >= 0;
     }
 
     /**
@@ -217,25 +217,24 @@ export class SupportBot {
                     client.message(
                         'Bitte gib einen Grund an, weswegen du mit uns sprechen möchtest. Andernfalls können wir dir nicht helfen.',
                     );
+                    setTimeout(
+                        async () => {
+                            if (!client) return;
+                            if (client.cid !== channel.cid) return;
+                            const info = await client.getInfo();
+                            if (!info.clientTalkRequest) {
+                                client.message(
+                                    'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
+                                );
+                                this.moveToDefaultChannel(client);
+                            }
+                        },
+                        2 * 60 * 1000,
+                        channel,
+                    );
                 }
             },
             30 * 1000,
-            channel,
-        );
-
-        setTimeout(
-            async () => {
-                if (!client) return;
-                if (client.cid !== channel.cid) return;
-                const info = await client.getInfo();
-                if (!info.clientTalkRequest) {
-                    client.message(
-                        'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
-                    );
-                    this.moveToDefaultChannel(client);
-                }
-            },
-            2 * 60 * 1000,
             channel,
         );
     }
