@@ -3,17 +3,26 @@ import { TSExitCode } from './utils';
 
 export class Bot {
     private _teamSpeakHandle: TeamSpeak;
+    /**
+     * Constructor of Bot invoces initialization.
+     * @param {TeamSpeak} teamSpeakHandle Handle of the teamspeak
+     */
     public constructor(teamSpeakHandle: TeamSpeak) {
         this._teamSpeakHandle = teamSpeakHandle;
         this._teamSpeakHandle.on('ready', this.init.bind(this));
     }
-
+    /**
+     * Returns a handle to the teamspeak
+     * @returns TeamSpeak Handle
+     */
     get teamSpeakHandle(): TeamSpeak {
         return this._teamSpeakHandle;
     }
-
+    /**
+     * Initializes Bot and sets server and nickname.
+     */
     private async init() {
-        if (!this._teamSpeakHandle.config.serverport) return;
+        if (!this._teamSpeakHandle.config.serverport || !this._teamSpeakHandle.config.nickname) return;
         await this._teamSpeakHandle.useByPort(
             this._teamSpeakHandle.config.serverport,
             this._teamSpeakHandle.config.nickname,
