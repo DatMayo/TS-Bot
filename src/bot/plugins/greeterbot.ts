@@ -23,8 +23,8 @@ export class GreeterBot {
     private async init(bot: Bot) {
         console.log('[GreeterBot] Initialization started');
         this._tsGuestGroup = await bot.getGroupByName(process.env.TS_GUEST_GROUP || 'Guest');
-        bot.onClientConnect(this.clientConnect.bind(this));
-        bot.onClientDisconnect(this.clientDisconnect.bind(this));
+        bot.teamSpeakHandle.on('clientconnect', this.clientConnect.bind(this));
+        bot.teamSpeakHandle.on('clientdisconnect', this.clientDisconnect.bind(this));
         console.log('[GreeterBot] Initialization done');
     }
     /**

@@ -24,7 +24,7 @@ export class TeamBot {
         console.log('[TeamBot] Initialization started');
         this._tsDefaultChannel = await bot.getDefaultChannel();
         this._tsTeamGroup = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
-        bot.onClientMoved(this.clientMoved.bind(this));
+        bot.teamSpeakHandle.on('clientmoved', this.clientMoved.bind(this));
         console.log('[TeamBot] Initialization done');
     }
     /**

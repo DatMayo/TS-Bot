@@ -30,9 +30,9 @@ export class ChannelBot {
     private async init(bot: Bot) {
         console.log('[ChannelBot] Initialization started');
         this._teamSpeakHandle = bot.teamSpeakHandle;
-        bot.onClientMoved(this.refreshChannels.bind(this));
-        bot.onClientConnect(this.refreshChannels.bind(this));
-        bot.onClientDisconnect(this.refreshChannels.bind(this));
+        bot.teamSpeakHandle.on('clientmoved', this.refreshChannels.bind(this));
+        bot.teamSpeakHandle.on('clientconnect', this.refreshChannels.bind(this));
+        bot.teamSpeakHandle.on('clientdisconnect', this.refreshChannels.bind(this));
         await this.refreshChannels();
         console.log('[ChannelBot] Initialization done');
     }

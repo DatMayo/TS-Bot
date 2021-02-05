@@ -39,9 +39,9 @@ export class SupportBot {
                 this._availableSupporter.push(client);
             }
         }
-        bot.onClientMoved(this.clientMoved.bind(this));
-        bot.onClientConnect(this.clientConnect.bind(this));
-        bot.onClientDisconnect(this.clientDisconnect.bind(this));
+        bot.teamSpeakHandle.on('clientmoved', this.clientMoved.bind(this));
+        bot.teamSpeakHandle.on('clientconnect', this.clientConnect.bind(this));
+        bot.teamSpeakHandle.on('clientdisconnect', this.clientDisconnect.bind(this));
         console.log('[SupportBot] Initialization done');
     }
     // TODO --- refactored until here, new refactoring starting here
