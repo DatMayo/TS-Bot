@@ -1,0 +1,14 @@
+{
+    "files.eol": "\n",
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true
+    },
+    "editor.formatOnSave": true,
+    "eslint.format.enable": true,
+    "eslint.lintTask.enable": true,
+    "eslint.run": "onSave",
+    "eslint.validate": [
+        "typescript",
+        "javascript"
+    ]
+}
