@@ -19,5 +19,3 @@ new ChannelBot(bot);
 new GreeterBot(bot);
 new SupportBot(bot);
 new TeamBot(bot);
-
-//new SupportBot(teamspeak, serverName);
