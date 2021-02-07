@@ -61,13 +61,52 @@ export class ChannelBot {
             if ((await lastChannel.getClients()).length > 0) {
                 const upperChannel = await this._teamSpeakHandle.getChannelByName(manangedChannel.upperChannel);
                 if (!upperChannel) continue;
-                await this._teamSpeakHandle.channelCreate(
+                const channel = await this._teamSpeakHandle.channelCreate(
                     `${manangedChannel.pattern}${channelToRenameHandles.length + 1}`,
                     {
                         channelFlagPermanent: true,
                         cpid: upperChannel.cid,
                     },
                 );
+                await this._teamSpeakHandle.channelSetPerms(channel, [
+                    {
+                        permsid: 'i_channel_needed_subscribe_power',
+                        permvalue: 50,
+                    },
+                    {
+                        permsid: 'i_channel_needed_join_power',
+                        permvalue: 50,
+                    },
+                    {
+                        permsid: 'i_needed_modify_power_channel_modify_power',
+                        permvalue: 100,
+                    },
+                    // File Transfer, set to higest posibile
+                    {
+                        permsid: 'i_ft_needed_file_upload_power',
+                        permvalue: 100,
+                    },
+                    {
+                        permsid: 'i_ft_needed_file_download_power',
+                        permvalue: 100,
+                    },
+                    {
+                        permsid: 'i_ft_needed_file_delete_power',
+                        permvalue: 100,
+                    },
+                    {
+                        permsid: 'i_ft_needed_file_rename_power',
+                        permvalue: 100,
+                    },
+                    {
+                        permsid: 'i_ft_needed_file_browse_power',
+                        permvalue: 100,
+                    },
+                    {
+                        permsid: 'i_ft_needed_directory_create_power',
+                        permvalue: 100,
+                    },
+                ]);
             }
         }
     }
