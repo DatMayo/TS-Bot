@@ -1,9 +1,7 @@
-import typescript from '@rollup/plugin-typescript';
-import nodeResolve from '@rollup/plugin-node-resolve';
-// import autoExternal from 'rollup-plugin-auto-external';
-
+import json from '@rollup/plugin-json';
 import commonjs from '@rollup/plugin-commonjs';
-import pkg from './package.json';
+import nodeResolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
 
 export default {
     input: 'src/main.ts',
@@ -13,19 +11,5 @@ export default {
             format: 'cjs',
         },
     ],
-    external: [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})],
-    plugins: [
-        commonjs(),
-        nodeResolve({
-            moduleDirectories: ['node_modules'],
-            mainFields: ['default', 'module', 'require'],
-        }),
-        typescript({ sourceMap: false }),
-        /* autoExternal({
-            builtins: true,
-            dependencies: true,
-            packagePath: './package.json',
-            peerDependencies: false,
-        }), */
-    ],
+    plugins: [json(), commonjs(), nodeResolve({ preferBuiltins: true }), typescript({ sourceMap: false })],
 };
