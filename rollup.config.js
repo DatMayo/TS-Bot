@@ -9,7 +9,7 @@ export default {
     input: 'src/main.ts',
     output: [
         {
-            file: './dist/bundle.plain.js',
+            file: './build/bundle.plain.js',
             format: 'cjs',
         },
     ],

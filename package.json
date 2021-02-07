@@ -5,9 +5,9 @@
     "scripts": {
         "build": "rollup -c && npm run obfuscate",
         "build:watch": "rollup -cw",
-        "debug": "nodemon ./dist/bundle.plain.js",
+        "debug": "nodemon ./build/bundle.plain.js",
         "lint": "eslint .",
-        "obfuscate": "javascript-obfuscator ./dist/bundle.plain.js --output ./dist/bundle.js --config obfuscator.json"
+        "obfuscate": "javascript-obfuscator ./build/bundle.plain.js --output ./build/bundle.js --config obfuscator.json"
     },
     "repository": {
         "type": "git",
