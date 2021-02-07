@@ -1,9 +1,9 @@
-import { TeamSpeakChannel, TeamSpeakClient, TeamSpeakServerGroup } from 'ts3-nodejs-library';
+import { TeamSpeak, TeamSpeakChannel, TeamSpeakClient, TeamSpeakServerGroup } from 'ts3-nodejs-library';
 import { Bot } from '..';
 import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 
 export class SupportBot {
-    private _availableSupporter: TeamSpeakClient[] = [];
+    private _teamSpeakHandle: TeamSpeak | undefined = undefined;
     private _managedSupportChannelHandles: TeamSpeakChannel[] = [];
     private _tsDefaultChannel: TeamSpeakChannel | undefined = undefined;
     private _registerChannelHandle: TeamSpeakChannel | undefined = undefined;
@@ -17,11 +17,27 @@ export class SupportBot {
         this.init(bot);
     }
     /**
+     * Fetches the current available Supporters.
+     */
+    private async availableSupporter(): Promise<TeamSpeakClient[]> {
+        const supporter: TeamSpeakClient[] = [];
+        for (const client of await (this._teamSpeakHandle as TeamSpeak).clientList()) {
+            if (
+                client.servergroups.indexOf((this._teamGroupHandle as TeamSpeakServerGroup).sgid) !== -1 &&
+                client.servergroups.indexOf((this._supportGroupHandle as TeamSpeakServerGroup).sgid) !== -1
+            ) {
+                supporter.push(client);
+            }
+        }
+        return supporter;
+    }
+    /**
      * Initializes SupportBot and sets channels, groups and events.
      * @param {Bot} bot Handle to the main bot
      */
     async init(bot: Bot): Promise<void> {
         console.log('[SupportBot] Initialization started');
+        this._teamSpeakHandle = bot.teamSpeakHandle;
         this._teamGroupHandle = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
         this._supportGroupHandle = await bot.getGroupByName(process.env.TS_SUPPORT_GROUP || 'Bereitschaft');
         this._tsDefaultChannel = await bot.getDefaultChannel();
@@ -31,121 +47,99 @@ export class SupportBot {
         for (const managedSupportChannel of ['Support', 'Termin']) {
             this._managedSupportChannelHandles.push(await bot.getChannelByName(managedSupportChannel));
         }
-        for (const client of await bot.teamSpeakHandle.clientList()) {
-            if (
-                client.servergroups.indexOf(this._teamGroupHandle.sgid) !== -1 &&
-                client.servergroups.indexOf(this._supportGroupHandle.sgid) !== -1
-            ) {
-                this._availableSupporter.push(client);
-            }
-        }
         bot.teamSpeakHandle.on('clientmoved', this.clientMoved.bind(this));
         bot.teamSpeakHandle.on('clientconnect', this.clientConnect.bind(this));
         bot.teamSpeakHandle.on('clientdisconnect', this.clientDisconnect.bind(this));
         console.log('[SupportBot] Initialization done');
     }
-    // TODO --- refactored until here, new refactoring starting here
+    /**
+     * Checks for SupportGroupHandle on connect and removes it.
+     * @param {ClientConnect} event connection event
+     */
     private async clientConnect(event: ClientConnect): Promise<void> {
-        if (!this._teamGroupHandle) return;
-        if (!this._supportGroupHandle) return;
-
         const client = event.client;
-        if (client.servergroups[0] == '2') return;
-
-        if (client.servergroups.indexOf(this._supportGroupHandle.sgid) !== -1) {
-            await this.removeSupportPermission(client);
+        if (client.type != 0) return; // Ignore server query clients
+        if (this.hasSupportPermission(client)) {
+            await this.toggleSupportPermission(client);
             await client.message(
                 'Hey, du hattest vergessen dir beim letzten mal die Bereitschaftsgruppe zu entfernen. Ich hab das mal für dich gemacht :o)',
             );
-            return;
         }
     }
-
+    /**
+     * Checks for SupportGroupHandle on disconnect and removes it.
+     * @param {ClientDisconnect} event disconnection event
+     */
     private async clientDisconnect(event: ClientDisconnect): Promise<void> {
         const client = event.client;
         if (!client) return;
-        if (!this._teamGroupHandle) return;
-
-        if (client.servergroups.indexOf(this._teamGroupHandle.sgid) === -1) return;
-
-        const idx = this._availableSupporter.indexOf(client);
-        if (idx === -1) return;
-        this._availableSupporter.splice(idx);
-        console.log(
-            `[SupportBot] ${client.nickname} was registered as supporter on standby, I removed him because he disconnected.`,
-        );
-        console.log(`[SupportBot] There are/is now a total of ${this._availableSupporter.length} supporter on standby`);
+        if (client.servergroups.indexOf((this._supportGroupHandle as TeamSpeakServerGroup).sgid) === -1) return;
+        if (this.hasSupportPermission(client)) {
+            await this.toggleSupportPermission(client);
+            console.log(`[SupportBot] ${client.nickname} was removed as supporter because he disconnected.`);
+            console.log(
+                `[SupportBot] There are/is now a total of ${
+                    (await this.availableSupporter()).length
+                } supporter on standby`,
+            );
+        }
     }
-
+    /**
+     * Checks for actions on clientmove.
+     * @param {ClientMoved} event clientmove event
+     */
     private async clientMoved(event: ClientMoved): Promise<void> {
         const client = event.client;
         const channel = event.channel;
-
-        // if (this._managedSupportChannelHandles.indexOf(channel) === -1) return;
-        if (!this._teamGroupHandle) return;
-        if (!this._supportGroupHandle) return;
-        if (client.servergroups.indexOf(this._teamGroupHandle.sgid) !== -1) {
+        if (client.servergroups.indexOf((this._teamGroupHandle as TeamSpeakServerGroup).sgid) !== -1) {
             if (channel !== this._registerChannelHandle) return;
-            await this.doTeamRegistration(client);
-
-            //Fun Stuff :-D
-            const kick = Boolean(Math.round(Math.random()));
-            if (!kick) {
-                await this.moveToDefaultChannel(client);
-            } else {
-                await this.kickToDefaultChannel(client);
-            }
+            await this.toggleSupportPermission(client);
+            Math.random() > 0.1 ? await this.moveToDefaultChannel(client) : await this.kickToDefaultChannel(client);
             console.log(
-                `[SupportBot] There are/is now a total of ${this._availableSupporter.length} supporter on standby`,
+                `[SupportBot] There are/is now a total of ${
+                    (await this.availableSupporter()).length
+                } supporter on standby`,
             );
         } else {
             this.checkSupport(client, channel);
         }
     }
-
-    /**
-     * Adds the support group to the given client
-     * @param  {TeamSpeakClient} client Handle to client
-     * @private
-     */
-    private async addSupportPermission(client: TeamSpeakClient): Promise<boolean> {
-        if (this.hasSupportPermission(client)) return false;
-        if (!this._supportGroupHandle) return false;
-        await client.addGroups(this._supportGroupHandle).catch((err) => {
-            console.error(`Could not add group ${this._supportGroupHandle?.name} to user ${client.nickname}.`);
-            console.error(`Thrown error was: ${err.message}`);
-        });
-        console.log(`[SupportBot] ${client.nickname} is now on standby`);
-        return true;
-    }
-
     /**
      * Toggles the registration channel
      * @param  {TeamSpeakClient} client Handle to client
      * @returns Promise<void>
      */
-    private async doTeamRegistration(client: TeamSpeakClient): Promise<void> {
+    private async toggleSupportPermission(client: TeamSpeakClient): Promise<void> {
         if (this.hasSupportPermission(client)) {
-            await this.removeSupportPermission(client);
-            const idx = this._availableSupporter.indexOf(client);
-            if (idx !== -1) this._availableSupporter.splice(idx);
+            await client
+                .delGroups(this._supportGroupHandle as TeamSpeakServerGroup)
+                .then(() => {
+                    console.log(`[SupportBot] ${client.nickname} is not on standby anymore`);
+                })
+                .catch((err) => {
+                    console.error(
+                        `Could not remove group ${this._supportGroupHandle?.name} for user ${client.nickname}.`,
+                    );
+                    console.error(`Thrown error was: ${err.message}`);
+                    return false;
+                });
         } else {
-            await this.addSupportPermission(client);
-            this._availableSupporter.push(client);
+            await client.addGroups(this._supportGroupHandle as TeamSpeakServerGroup).catch((err) => {
+                console.error(`Could not add group ${this._supportGroupHandle?.name} to user ${client.nickname}.`);
+                console.error(`Thrown error was: ${err.message}`);
+            });
+            console.log(`[SupportBot] ${client.nickname} is now on standby`);
         }
     }
-
     /**
      * Checks if a client has support permission
      * @param  {TeamSpeakClient} client Handle to client
      * @returns true if the client has support permissions
-     * @private
      */
     private hasSupportPermission(client: TeamSpeakClient): boolean {
         if (!this._supportGroupHandle) return false;
         return client.servergroups.indexOf(this._supportGroupHandle.sgid) >= 0;
     }
-
     /**
      * Kicks a user to the default channel
      * @param  {TeamSpeakClient} client Handle to client
@@ -155,7 +149,6 @@ export class SupportBot {
         client.kickFromChannel('( ಠ◡ಠ ) Evil james has kicked you');
         return;
     }
-
     /**
      * Moves a user to the default channel
      * @param  {TeamSpeakClient} client Handle to client
@@ -166,22 +159,7 @@ export class SupportBot {
         client.move(this._tsDefaultChannel.cid);
         return;
     }
-
-    /**
-     * Removes the support group to the given client
-     * @param  {TeamSpeakClient} client Handle to client
-     * @private
-     */
-    private async removeSupportPermission(client: TeamSpeakClient): Promise<boolean> {
-        if (!this.hasSupportPermission(client)) return false;
-        if (!this._supportGroupHandle) return false;
-        await client.delGroups(this._supportGroupHandle).catch((err) => {
-            console.error(`Could not remove group ${this._supportGroupHandle?.name} for user ${client.nickname}.`);
-            console.error(`Thrown error was: ${err.message}`);
-            console.log(`[SupportBot] ${client.nickname} is not on on standby anymore`);
-        });
-        return false;
-    }
+    //TODO Refactoring staring here
 
     /**
      * Checks for available support options
@@ -193,7 +171,7 @@ export class SupportBot {
         if (this._managedSupportChannelHandles.length === 0) return;
         const foundChannel = this._managedSupportChannelHandles.find((item) => item.cid === channel.cid);
         if (!foundChannel) return;
-        if (this._availableSupporter.length === 0) {
+        if ((await this.availableSupporter()).length === 0) {
             return client.message(
                 'Es ist aktuell kein Supporter im Dienst. Du kannst warten oder gern zu einem späteren Zeitpunkt zurück kommen',
             );
@@ -202,7 +180,7 @@ export class SupportBot {
         await client.message('Willkommen im Wartebereich,');
         await client.message('bitte fordere Talkpower an, damit wir dein Anliegen schnellstmöglich bearbeiten können.');
 
-        for (const supporter of this._availableSupporter) {
+        for (const supporter of await this.availableSupporter()) {
             await supporter.message(
                 `[URL=client://${client.clid}/${client.uniqueIdentifier}]${client.nickname}[/URL] wartet in [URL=channelid://${channel.cid}]${channel.name}[/URL], bitte kümmere dich um Ihn, sobald er/sie Talkpower angefordert hat`,
             );
