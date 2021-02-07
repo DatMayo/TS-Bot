@@ -41,7 +41,7 @@ export class SupportBot {
         this._registerChannelHandle = await bot.getChannelByName(
             process.env.TS_REGISTRATION_CHANNEL || 'An-/Abmeldung',
         );
-        for (const managedSupportChannel of ['Support', 'Termin']) {
+        for (const managedSupportChannel of ['Warteraum', 'Termin']) {
             this._managedSupportChannelHandles.push(await bot.getChannelByName(managedSupportChannel));
         }
         bot.teamSpeakHandle.on('clientmoved', this.clientMoved.bind(this));
