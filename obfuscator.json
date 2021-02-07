@@ -1,0 +1,6 @@
+{
+    "deadCodeInjection": true,
+    "deadCodeInjectionThreshold": 0.6,
+    "mangled": "mangled",
+    "log": false
+}
