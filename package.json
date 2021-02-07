@@ -5,7 +5,6 @@
     "scripts": {
         "build": "rollup -c && npm run obfuscate",
         "build:watch": "rollup -cw",
-        "clean": "git clean -fXd -e \\!node_modules -e \\!node_modules/**/*",
         "debug": "nodemon ./dist/bundle.plain.js",
         "lint": "eslint .",
         "obfuscate": "javascript-obfuscator ./dist/bundle.plain.js --output ./dist/bundle.js --config obfuscator.json"
