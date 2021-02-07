@@ -22,10 +22,7 @@ export class SupportBot {
     private async availableSupporter(): Promise<TeamSpeakClient[]> {
         const supporter: TeamSpeakClient[] = [];
         for (const client of await (this._teamSpeakHandle as TeamSpeak).clientList()) {
-            if (
-                client.servergroups.indexOf((this._teamGroupHandle as TeamSpeakServerGroup).sgid) !== -1 &&
-                client.servergroups.indexOf((this._supportGroupHandle as TeamSpeakServerGroup).sgid) !== -1
-            ) {
+            if (client.servergroups.indexOf((this._supportGroupHandle as TeamSpeakServerGroup).sgid) !== -1) {
                 supporter.push(client);
             }
         }
@@ -85,26 +82,6 @@ export class SupportBot {
         }
     }
     /**
-     * Checks for actions on clientmove.
-     * @param {ClientMoved} event clientmove event
-     */
-    private async clientMoved(event: ClientMoved): Promise<void> {
-        const client = event.client;
-        const channel = event.channel;
-        if (client.servergroups.indexOf((this._teamGroupHandle as TeamSpeakServerGroup).sgid) !== -1) {
-            if (channel !== this._registerChannelHandle) return;
-            await this.toggleSupportPermission(client);
-            Math.random() > 0.1 ? await this.moveToDefaultChannel(client) : await this.kickToDefaultChannel(client);
-            console.log(
-                `[SupportBot] There are/is now a total of ${
-                    (await this.availableSupporter()).length
-                } supporter on standby`,
-            );
-        } else {
-            this.checkSupport(client, channel);
-        }
-    }
-    /**
      * Toggles the registration channel
      * @param  {TeamSpeakClient} client Handle to client
      * @returns Promise<void>
@@ -159,61 +136,63 @@ export class SupportBot {
         client.move(this._tsDefaultChannel.cid);
         return;
     }
-    //TODO Refactoring staring here
-
+    /**
+     * Checks for actions on clientmove.
+     * @param {ClientMoved} event clientmove event
+     */
+    private async clientMoved(event: ClientMoved): Promise<void> {
+        const client = event.client;
+        const channel = event.channel;
+        if (client.type != 0) return;
+        if (client.servergroups.indexOf((this._teamGroupHandle as TeamSpeakServerGroup).sgid) !== -1) {
+            if (channel !== this._registerChannelHandle) return;
+            await this.toggleSupportPermission(client);
+            Math.random() > 0.1 ? await this.moveToDefaultChannel(client) : await this.kickToDefaultChannel(client);
+            console.log(
+                `[SupportBot] There are/is now a total of ${
+                    (await this.availableSupporter()).length
+                } supporter on standby`,
+            );
+        } else {
+            const foundChannel = this._managedSupportChannelHandles.find((item) => item.cid === channel.cid);
+            if (!foundChannel) return;
+            await this.checkSupport(client, channel);
+        }
+    }
     /**
      * Checks for available support options
      * @param  {TeamSpeakClient} client Handle to client
      * @param  {TeamSpeakChannel} channel Handle to client channel
      */
     private async checkSupport(client: TeamSpeakClient, channel: TeamSpeakChannel) {
-        if (client.type != 0) return;
-        if (this._managedSupportChannelHandles.length === 0) return;
-        const foundChannel = this._managedSupportChannelHandles.find((item) => item.cid === channel.cid);
-        if (!foundChannel) return;
         if ((await this.availableSupporter()).length === 0) {
             return client.message(
-                'Es ist aktuell kein Supporter im Dienst. Du kannst warten oder gern zu einem späteren Zeitpunkt zurück kommen',
+                'Es ist aktuell kein Supporter im Dienst. Du kannst warten oder gern zu einem späteren Zeitpunkt zurück kommen.',
             );
         }
-
         await client.message('Willkommen im Wartebereich,');
         await client.message('bitte fordere Talkpower an, damit wir dein Anliegen schnellstmöglich bearbeiten können.');
-
         for (const supporter of await this.availableSupporter()) {
             await supporter.message(
                 `[URL=client://${client.clid}/${client.uniqueIdentifier}]${client.nickname}[/URL] wartet in [URL=channelid://${channel.cid}]${channel.name}[/URL], bitte kümmere dich um Ihn, sobald er/sie Talkpower angefordert hat`,
             );
         }
-
-        setTimeout(
-            async () => {
-                if (!client) return;
-                if (client.cid !== channel.cid) return;
-                const info = await client.getInfo();
-                if (!info.clientTalkRequest) {
-                    client.message(
-                        'Bitte gib einen Grund an, weswegen du mit uns sprechen möchtest. Andernfalls können wir dir nicht helfen.',
-                    );
-                    setTimeout(
-                        async () => {
-                            if (!client) return;
-                            if (client.cid !== channel.cid) return;
-                            const info = await client.getInfo();
-                            if (!info.clientTalkRequest) {
-                                client.message(
-                                    'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
-                                );
-                                this.moveToDefaultChannel(client);
-                            }
-                        },
-                        2 * 60 * 1000,
-                        channel,
-                    );
-                }
-            },
-            30 * 1000,
-            channel,
-        );
+        setTimeout(async () => {
+            if (!client || client.cid !== channel.cid) return;
+            if (!(await client.getInfo()).clientTalkRequest) {
+                client.message(
+                    'Bitte gib einen Grund an, weswegen du mit uns sprechen möchtest. Andernfalls können wir dir nicht helfen.',
+                );
+                setTimeout(async () => {
+                    if (!client || client.cid !== channel.cid) return;
+                    if (!(await client.getInfo()).clientTalkRequest) {
+                        client.message(
+                            'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
+                        );
+                        this.moveToDefaultChannel(client);
+                    }
+                }, 2 * 60 * 1000);
+            }
+        }, 30 * 1000);
     }
 }
