@@ -3,23 +3,28 @@
     "version": "0.0.1",
     "description": "",
     "scripts": {
-        "build": "tsc",
-        "build:watch": "tsc -w",
+        "build": "rollup -c && npm run obfuscate",
+        "build:watch": "rollup -cw",
         "clean": "git clean -fXd -e \\!node_modules -e \\!node_modules/**/*",
-        "debug": "nodemon ./dist/main.js",
-        "lint": "eslint ."
+        "debug": "nodemon ./dist/bundle.plain.js",
+        "lint": "eslint .",
+        "obfuscate": "javascript-obfuscator ./dist/bundle.plain.js --output ./dist/bundle.js --config obfuscator.json"
     },
     "repository": {
         "type": "git",
         "url": "git@git.reloaded-life.de:Reloaded-Life/ts_bot.git"
     },
     "devDependencies": {
+        "@rollup/plugin-commonjs": "^17.1.0",
+        "@rollup/plugin-node-resolve": "^11.1.1",
+        "@rollup/plugin-typescript": "^8.1.1",
         "@types/node": "^14.14.25",
         "@typescript-eslint/eslint-plugin": "^4.14.2",
         "@typescript-eslint/parser": "^4.14.2",
         "eslint": "^7.19.0",
         "eslint-config-prettier": "^7.2.0",
         "eslint-plugin-prettier": "^3.3.1",
+        "javascript-obfuscator": "^2.10.3",
         "nodemon": "^2.0.7",
         "prettier": "^2.2.1",
         "typescript": "^4.1.3"
