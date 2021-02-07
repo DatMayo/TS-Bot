@@ -9,11 +9,6 @@ pipeline {
                 }
             }
         }
-        stage('npm clean') { 
-            steps {
-                sh 'npm run clean' 
-            }
-        }
         stage('npm install') { 
             steps {
                 sh 'npm install' 
