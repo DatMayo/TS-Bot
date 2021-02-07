@@ -9,11 +9,6 @@ pipeline {
                 }
             }
         }
-        stage('npm clean') { 
-            steps {
-                sh 'npm run clean' 
-            }
-        }
         stage('npm install') { 
             steps {
                 sh 'npm install' 
@@ -27,7 +22,15 @@ pipeline {
         stage('npm run build') { 
             steps {
                 sh 'npm run build'
-                archiveArtifacts artifacts: 'dist/**/*.js'
+                archiveArtifacts artifacts: 'build/bundle.js'
+            }
+        }
+        stage('deploy'){
+            when {
+                branch 'master'
+            }
+            steps {
+                sh 'sudo jenkins_deploy ts_bot'
             }
         }
     }

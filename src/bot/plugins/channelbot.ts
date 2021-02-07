@@ -1,27 +1,44 @@
 import { TeamSpeak } from 'ts3-nodejs-library';
 import { TeamSpeakChannel } from 'ts3-nodejs-library/lib/node/Channel';
-import { ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 import { Bot } from '..';
 
 interface IChannelDefinition {
     pattern: string;
     upperChannel: string;
 }
+/**
+ * ChannelBot plugin for TS Bot.
+ * @param {Bot} bot Handle to the main bot
+ */
 export class ChannelBot {
     private _managedChannels: IChannelDefinition[] = [
         { pattern: 'Team #', upperChannel: 'Team-Talk' },
         { pattern: 'Support #', upperChannel: 'Support' },
     ];
     private _teamSpeakHandle: TeamSpeak | undefined;
+    /**
+     * Constructor of ChannelBot invoces initialization.
+     * @param {Bot} bot Handle to the main bot
+     */
     constructor(bot: Bot) {
-        console.log('[ChannelBot] Staging started, please wait');
-        this._teamSpeakHandle = bot.teamSpeakHandle;
-        bot.onClientMoved(this.refreshChannels.bind(this));
-        bot.onClientConnect(this.refreshChannels.bind(this));
-        bot.onClientDisconnect(this.refreshChannels.bind(this));
-        this.refreshChannels().then(() => console.log('[ChannelBot] Staging complete, ChannelBot ready'));
+        this.init(bot);
     }
-
+    /**
+     * Initializes ChannelBot and sets events.
+     * @param {Bot} bot Handle to the main bot
+     */
+    private async init(bot: Bot) {
+        console.log('[ChannelBot] Initialization started');
+        this._teamSpeakHandle = bot.teamSpeakHandle;
+        bot.teamSpeakHandle.on('clientmoved', this.refreshChannels.bind(this));
+        bot.teamSpeakHandle.on('clientconnect', this.refreshChannels.bind(this));
+        bot.teamSpeakHandle.on('clientdisconnect', this.refreshChannels.bind(this));
+        await this.refreshChannels();
+        console.log('[ChannelBot] Initialization done');
+    }
+    /**
+     * Function which will be invoked by onClientMoved, onClientConnect and onClientDisconnect event.
+     */
     private async refreshChannels() {
         if (!this._teamSpeakHandle) return;
         const channelList: TeamSpeakChannel[] | undefined = await this._teamSpeakHandle.channelList();
@@ -52,12 +69,6 @@ export class ChannelBot {
                     },
                 );
             }
-        }
-    }
-
-    async clientMoved(event: ClientMoved): Promise<void> {
-        if (this._managedChannels.find((item) => event.channel.name.startsWith(item.pattern))) {
-            await this.refreshChannels();
         }
     }
 }
