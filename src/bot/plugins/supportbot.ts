@@ -32,7 +32,7 @@ export class SupportBot {
      * Initializes SupportBot and sets channels, groups and events.
      * @param {Bot} bot Handle to the main bot
      */
-    async init(bot: Bot): Promise<void> {
+    private async init(bot: Bot): Promise<void> {
         console.log('[SupportBot] Initialization started');
         this._teamSpeakHandle = bot.teamSpeakHandle;
         this._teamGroupHandle = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
