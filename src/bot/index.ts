@@ -10,9 +10,8 @@ export class Bot {
     public constructor(teamSpeakHandle: TeamSpeak) {
         this._teamSpeakHandle = teamSpeakHandle;
         this._teamSpeakHandle.on('ready', this.init.bind(this));
-        this._teamSpeakHandle.on('error', (error) => {
-            console.error(error.message);
-        });
+        //eslint-disable-next-line
+        this._teamSpeakHandle.on('error', () => {});
     }
     /**
      * Returns a handle to the teamspeak
