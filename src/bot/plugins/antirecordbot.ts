@@ -41,9 +41,9 @@ export class AntiRecordBot {
         if (!clientList) return;
         for (const client of clientList) {
             if (!client.isRecording) continue;
-            const warnedUser = this._warnList.findIndex((user) => user.uid == client.uniqueIdentifier);
+            let warnedUser = this._warnList.findIndex((user) => user.uid == client.uniqueIdentifier);
             if (warnedUser == -1) {
-                this._warnList.push({ count: 0, uid: client.uniqueIdentifier });
+                warnedUser = this._warnList.push({ count: 0, uid: client.uniqueIdentifier }) - 1;
             }
             this._warnList[warnedUser].count++;
             this._warnList[warnedUser].count < 3
