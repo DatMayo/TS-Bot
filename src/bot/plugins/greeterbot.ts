@@ -30,6 +30,7 @@ export class GreeterBot {
     private async clientConnect(event: ClientConnect): Promise<void> {
         const client = event.client;
         if (client.type != 0) return; // Ignore server query clients
+        console.log(`[GreeterBot] User ${client.nickname} connected`);
         client.message(
             'Willkommen auf unserem Server. Bitte registriere dich auf unserer Homepage (https://reloaded-life.de/#/register), falls du dies noch nicht getan hast.',
         );
