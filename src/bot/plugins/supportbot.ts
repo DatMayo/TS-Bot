@@ -2,6 +2,12 @@ import { TeamSpeak, TeamSpeakChannel, TeamSpeakClient, TeamSpeakServerGroup } fr
 import { Bot } from '..';
 import { ClientConnect, ClientDisconnect, ClientMoved } from 'ts3-nodejs-library/lib/types/Events';
 
+declare module 'ts3-nodejs-library' {
+    export interface TeamSpeakClient {
+        lastChannel: TeamSpeakChannel;
+    }
+}
+
 export class SupportBot {
     private _teamSpeakHandle: TeamSpeak | undefined = undefined;
     private _managedSupportChannelHandles: TeamSpeakChannel[] = [];
@@ -145,14 +151,18 @@ export class SupportBot {
         const channel = event.channel;
         if (client.type != 0) return;
         if (client.servergroups.indexOf((this._teamGroupHandle as TeamSpeakServerGroup).sgid) !== -1) {
-            if (channel !== this._registerChannelHandle) return;
-            await this.toggleSupportPermission(client);
-            Math.random() > 0.1 ? await this.moveToDefaultChannel(client) : await this.kickToDefaultChannel(client);
-            console.log(
-                `[SupportBot] There are/is now a total of ${
-                    (await this.availableSupporter()).length
-                } supporter on standby`,
-            );
+            if (channel !== this._registerChannelHandle) {
+                client.lastChannel = channel;
+            } else {
+                await this.toggleSupportPermission(client);
+                client.lastChannel ? client.move(client.lastChannel.cid) : this.moveToDefaultChannel(client);
+                // Math.random() > 0.1 ? await this.moveToDefaultChannel(client) : await this.kickToDefaultChannel(client);
+                console.log(
+                    `[SupportBot] There are/is now a total of ${
+                        (await this.availableSupporter()).length
+                    } supporter on standby`,
+                );
+            }
         } else {
             const foundChannel = this._managedSupportChannelHandles.find((item) => item.cid === channel.cid);
             if (!foundChannel) return;
