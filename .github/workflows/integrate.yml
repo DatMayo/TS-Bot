@@ -25,13 +25,10 @@ jobs:
           node-version: '14'
 
       # Install our dependencies
-      - name: Install base dependencies
       - run: npm ci
       
       # Lint our code, to meet our standard
-      - name: Code linting
       - run: npm run lint
       
       # Build our code
-      - name: Build Project
       - run: npm run build
