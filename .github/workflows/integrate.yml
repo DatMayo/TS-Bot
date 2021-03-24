@@ -26,6 +26,12 @@ jobs:
 
       # Install our dependencies
       - run: npm ci
+
+      # Check for vulnerabilities
+      - run: npm audit
+
+      # Check for major package updates
+      - run: npm run updatecheck
       
       # Lint our code, to meet our standard
       - run: npm run lint
