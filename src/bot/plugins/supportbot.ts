@@ -187,9 +187,7 @@ export class SupportBot {
         setTimeout(async () => {
             if (!client || client.cid !== channel.cid) return;
             if (!(await client.getInfo()).clientTalkRequest) {
-                client.message(
-                    'Please provide a reason why you want to speak to us. Otherwise we cannot help you.',
-                );
+                client.message('Please provide a reason why you want to speak to us. Otherwise we cannot help you.');
                 setTimeout(async () => {
                     if (!client || client.cid !== channel.cid) return;
                     if (!(await client.getInfo()).clientTalkRequest) {
