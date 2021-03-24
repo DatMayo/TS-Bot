@@ -31,9 +31,7 @@ export class GreeterBot {
         const client = event.client;
         if (client.type != 0) return; // Ignore server query clients
         console.log(`[GreeterBot] User ${client.nickname} connected`);
-        client.message(
-            'Willkommen auf unserem Server. Bitte registriere dich auf unserer Homepage (https://reloaded-life.de/#/register), falls du dies noch nicht getan hast.',
-        );
+        client.message("Welcome to our server. If you're not registered, please do on our website https://xyz");
     }
     /**
      * Function which will be invoked by onClientDisconnect event

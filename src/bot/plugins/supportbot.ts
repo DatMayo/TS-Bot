@@ -64,9 +64,6 @@ export class SupportBot {
         if (client.type != 0) return; // Ignore server query clients
         if (this.hasSupportPermission(client)) {
             await this.toggleSupportPermission(client);
-            await client.message(
-                'Hey, du hattest vergessen dir beim letzten mal die Bereitschaftsgruppe zu entfernen. Ich hab das mal für dich gemacht :o)',
-            );
         }
     }
     /**
@@ -177,27 +174,27 @@ export class SupportBot {
     private async checkSupport(client: TeamSpeakClient, channel: TeamSpeakChannel) {
         if ((await this.availableSupporter()).length === 0) {
             return client.message(
-                'Es ist aktuell kein Supporter im Dienst. Du kannst warten oder gern zu einem späteren Zeitpunkt zurück kommen.',
+                'There is currently no supporter on duty. You can wait or come back at a later time.',
             );
         }
-        await client.message('Willkommen im Wartebereich,');
-        await client.message('bitte fordere Talkpower an, damit wir dein Anliegen schnellstmöglich bearbeiten können.');
+        await client.message('Welcome in our waiting area,');
+        await client.message('please request talk power so that we can process your request as quickly as possible.');
         for (const supporter of await this.availableSupporter()) {
             await supporter.message(
-                `[URL=client://${client.clid}/${client.uniqueIdentifier}]${client.nickname}[/URL] wartet in [URL=channelid://${channel.cid}]${channel.name}[/URL], bitte kümmere dich um Ihn, sobald er/sie Talkpower angefordert hat`,
+                `[URL=client://${client.clid}/${client.uniqueIdentifier}]${client.nickname}[/URL] is waiting in [URL=channelid://${channel.cid}]${channel.name}[/URL]. please take care of him, after he requested talk power`,
             );
         }
         setTimeout(async () => {
             if (!client || client.cid !== channel.cid) return;
             if (!(await client.getInfo()).clientTalkRequest) {
                 client.message(
-                    'Bitte gib einen Grund an, weswegen du mit uns sprechen möchtest. Andernfalls können wir dir nicht helfen.',
+                    'Please provide a reason why you want to speak to us. Otherwise we cannot help you.',
                 );
                 setTimeout(async () => {
                     if (!client || client.cid !== channel.cid) return;
                     if (!(await client.getInfo()).clientTalkRequest) {
                         client.message(
-                            'Da du noch keine Talk Power angefordert hast, gehen wir davon aus das sich dein Anliegen erledigt hat. Sollte dies nicht der Fall sein, schau einfach nochmal in unserem Wartebereich vorbei.',
+                            'Since you have not yet requested Talk Power, we assume that your request has been dealt with. If this is not the case, just stop by our waiting area again.',
                         );
                         this.moveToDefaultChannel(client);
                     }
