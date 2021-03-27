@@ -2,7 +2,7 @@
 TeamSpeak Server can get really messy, if they have a lot of channels. This simple bot will help you a bit, organizing your TeamSpeak Server.
 
 ## What do I need ?
-1. A TeamSpeak 3 Server (obviusly)
+1. A TeamSpeak 3 Server (obviously)
 1. A (v)Server, where you can run this bot
 1. A query login
 1. The TS3 Query data (IP, Port, etc)
@@ -27,7 +27,7 @@ There is an easy way to test if everything workes as expected. Just run:
 ```bash
 npm run debug
 ```
-If there were any errors, you'll see it
+If there were any errors, you'll see it.
 
 ## Deploying
 To get the script running, just copy the `bundle.js` & `.env` file to your server and run it.
