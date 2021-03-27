@@ -71,43 +71,49 @@ export class ChannelBot {
                             cpid: upperChannel.cid,
                         },
                     );
+                    const channelPower: number = parseInt(<string>process.env.TS_NEEDED_CHANNEL_POWER) || 50;
+                    const filePower: number = parseInt(<string>process.env.TS_NEEDED_FILE_POWER) || 100;
                     await this._teamSpeakHandle.channelSetPerms(channel, [
                         {
                             permsid: 'i_channel_needed_subscribe_power',
-                            permvalue: 50,
+                            permvalue: channelPower,
                         },
                         {
                             permsid: 'i_channel_needed_join_power',
-                            permvalue: 50,
+                            permvalue: channelPower,
                         },
                         {
                             permsid: 'i_needed_modify_power_channel_modify_power',
-                            permvalue: 100,
+                            permvalue: channelPower,
+                        },
+                        {
+                            permsid: 'i_channel_needed_modify_power',
+                            permvalue: channelPower,
                         },
                         // File Transfer, set to higest posibile
                         {
                             permsid: 'i_ft_needed_file_upload_power',
-                            permvalue: 100,
+                            permvalue: filePower,
                         },
                         {
                             permsid: 'i_ft_needed_file_download_power',
-                            permvalue: 100,
+                            permvalue: filePower,
                         },
                         {
                             permsid: 'i_ft_needed_file_delete_power',
-                            permvalue: 100,
+                            permvalue: filePower,
                         },
                         {
                             permsid: 'i_ft_needed_file_rename_power',
-                            permvalue: 100,
+                            permvalue: filePower,
                         },
                         {
                             permsid: 'i_ft_needed_file_browse_power',
-                            permvalue: 100,
+                            permvalue: filePower,
                         },
                         {
                             permsid: 'i_ft_needed_directory_create_power',
-                            permvalue: 100,
+                            permvalue: filePower,
                         },
                     ]);
                 }
