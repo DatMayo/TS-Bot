@@ -40,9 +40,9 @@ export class ChannelBot {
      * Function which will be invoked by onClientMoved, onClientConnect and onClientDisconnect event.
      */
     private async refreshChannels() {
+        if (!this._teamSpeakHandle) return;
+        const channelList: TeamSpeakChannel[] | undefined = await this._teamSpeakHandle.channelList();
         try {
-            const channelList: TeamSpeakChannel[] | undefined = await (this
-                ._teamSpeakHandle as TeamSpeak).channelList();
             for (const manangedChannel of this._managedChannels) {
                 const channelToRenameHandles: TeamSpeakChannel[] = [];
                 const channelHandles = channelList.filter((channel) =>
@@ -57,24 +57,65 @@ export class ChannelBot {
                 for (let i = 0; i < channelToRenameHandles.length; i++) {
                     const channelName = `${manangedChannel.pattern}${i + 1}`;
                     if (channelToRenameHandles[i].name !== channelName) {
-                        await (this._teamSpeakHandle as TeamSpeak).channelEdit(channelToRenameHandles[i], {
-                            channelName,
-                        });
+                        await this._teamSpeakHandle.channelEdit(channelToRenameHandles[i], { channelName });
                     }
                 }
                 const lastChannel = channelToRenameHandles[channelToRenameHandles.length - 1];
                 if ((await lastChannel.getClients()).length > 0) {
-                    const upperChannel = await (this._teamSpeakHandle as TeamSpeak).getChannelByName(
-                        manangedChannel.upperChannel,
-                    );
+                    const upperChannel = await this._teamSpeakHandle.getChannelByName(manangedChannel.upperChannel);
                     if (!upperChannel) continue;
-                    await (this._teamSpeakHandle as TeamSpeak).channelCreate(
+                    const channel = await this._teamSpeakHandle.channelCreate(
                         `${manangedChannel.pattern}${channelToRenameHandles.length + 1}`,
                         {
                             channelFlagPermanent: true,
                             cpid: upperChannel.cid,
                         },
                     );
+                    const channelPower: number = parseInt(<string>process.env.TS_NEEDED_CHANNEL_POWER) || 50;
+                    const filePower: number = parseInt(<string>process.env.TS_NEEDED_FILE_POWER) || 100;
+                    await this._teamSpeakHandle.channelSetPerms(channel, [
+                        {
+                            permsid: 'i_channel_needed_subscribe_power',
+                            permvalue: channelPower,
+                        },
+                        {
+                            permsid: 'i_channel_needed_join_power',
+                            permvalue: channelPower,
+                        },
+                        {
+                            permsid: 'i_needed_modify_power_channel_modify_power',
+                            permvalue: channelPower,
+                        },
+                        {
+                            permsid: 'i_channel_needed_modify_power',
+                            permvalue: channelPower,
+                        },
+                        // File Transfer, set to higest posibile
+                        {
+                            permsid: 'i_ft_needed_file_upload_power',
+                            permvalue: filePower,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_download_power',
+                            permvalue: filePower,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_delete_power',
+                            permvalue: filePower,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_rename_power',
+                            permvalue: filePower,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_browse_power',
+                            permvalue: filePower,
+                        },
+                        {
+                            permsid: 'i_ft_needed_directory_create_power',
+                            permvalue: filePower,
+                        },
+                    ]);
                 }
             }
         } catch (ex) {
