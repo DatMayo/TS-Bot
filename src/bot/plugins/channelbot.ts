@@ -42,72 +42,78 @@ export class ChannelBot {
     private async refreshChannels() {
         if (!this._teamSpeakHandle) return;
         const channelList: TeamSpeakChannel[] | undefined = await this._teamSpeakHandle.channelList();
-        for (const manangedChannel of this._managedChannels) {
-            const channelToRenameHandles: TeamSpeakChannel[] = [];
-            const channelHandles = channelList.filter((channel) => channel.name.startsWith(manangedChannel.pattern));
-            if (!channelHandles) continue;
-            for (let i = 0; i < channelHandles.length; i++) {
-                (await channelHandles[i].getClients()).length === 0 && i < channelHandles.length - 1
-                    ? await channelHandles[i].del()
-                    : channelToRenameHandles.push(channelHandles[i]);
-            }
-            for (let i = 0; i < channelToRenameHandles.length; i++) {
-                const channelName = `${manangedChannel.pattern}${i + 1}`;
-                if (channelToRenameHandles[i].name !== channelName) {
-                    await this._teamSpeakHandle.channelEdit(channelToRenameHandles[i], { channelName });
+        try {
+            for (const manangedChannel of this._managedChannels) {
+                const channelToRenameHandles: TeamSpeakChannel[] = [];
+                const channelHandles = channelList.filter((channel) =>
+                    channel.name.startsWith(manangedChannel.pattern),
+                );
+                if (!channelHandles) continue;
+                for (let i = 0; i < channelHandles.length; i++) {
+                    (await channelHandles[i].getClients()).length === 0 && i < channelHandles.length - 1
+                        ? await channelHandles[i].del()
+                        : channelToRenameHandles.push(channelHandles[i]);
+                }
+                for (let i = 0; i < channelToRenameHandles.length; i++) {
+                    const channelName = `${manangedChannel.pattern}${i + 1}`;
+                    if (channelToRenameHandles[i].name !== channelName) {
+                        await this._teamSpeakHandle.channelEdit(channelToRenameHandles[i], { channelName });
+                    }
+                }
+                const lastChannel = channelToRenameHandles[channelToRenameHandles.length - 1];
+                if ((await lastChannel.getClients()).length > 0) {
+                    const upperChannel = await this._teamSpeakHandle.getChannelByName(manangedChannel.upperChannel);
+                    if (!upperChannel) continue;
+                    const channel = await this._teamSpeakHandle.channelCreate(
+                        `${manangedChannel.pattern}${channelToRenameHandles.length + 1}`,
+                        {
+                            channelFlagPermanent: true,
+                            cpid: upperChannel.cid,
+                        },
+                    );
+                    await this._teamSpeakHandle.channelSetPerms(channel, [
+                        {
+                            permsid: 'i_channel_needed_subscribe_power',
+                            permvalue: 50,
+                        },
+                        {
+                            permsid: 'i_channel_needed_join_power',
+                            permvalue: 50,
+                        },
+                        {
+                            permsid: 'i_needed_modify_power_channel_modify_power',
+                            permvalue: 100,
+                        },
+                        // File Transfer, set to higest posibile
+                        {
+                            permsid: 'i_ft_needed_file_upload_power',
+                            permvalue: 100,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_download_power',
+                            permvalue: 100,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_delete_power',
+                            permvalue: 100,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_rename_power',
+                            permvalue: 100,
+                        },
+                        {
+                            permsid: 'i_ft_needed_file_browse_power',
+                            permvalue: 100,
+                        },
+                        {
+                            permsid: 'i_ft_needed_directory_create_power',
+                            permvalue: 100,
+                        },
+                    ]);
                 }
             }
-            const lastChannel = channelToRenameHandles[channelToRenameHandles.length - 1];
-            if ((await lastChannel.getClients()).length > 0) {
-                const upperChannel = await this._teamSpeakHandle.getChannelByName(manangedChannel.upperChannel);
-                if (!upperChannel) continue;
-                const channel = await this._teamSpeakHandle.channelCreate(
-                    `${manangedChannel.pattern}${channelToRenameHandles.length + 1}`,
-                    {
-                        channelFlagPermanent: true,
-                        cpid: upperChannel.cid,
-                    },
-                );
-                await this._teamSpeakHandle.channelSetPerms(channel, [
-                    {
-                        permsid: 'i_channel_needed_subscribe_power',
-                        permvalue: 50,
-                    },
-                    {
-                        permsid: 'i_channel_needed_join_power',
-                        permvalue: 50,
-                    },
-                    {
-                        permsid: 'i_needed_modify_power_channel_modify_power',
-                        permvalue: 100,
-                    },
-                    // File Transfer, set to higest posibile
-                    {
-                        permsid: 'i_ft_needed_file_upload_power',
-                        permvalue: 100,
-                    },
-                    {
-                        permsid: 'i_ft_needed_file_download_power',
-                        permvalue: 100,
-                    },
-                    {
-                        permsid: 'i_ft_needed_file_delete_power',
-                        permvalue: 100,
-                    },
-                    {
-                        permsid: 'i_ft_needed_file_rename_power',
-                        permvalue: 100,
-                    },
-                    {
-                        permsid: 'i_ft_needed_file_browse_power',
-                        permvalue: 100,
-                    },
-                    {
-                        permsid: 'i_ft_needed_directory_create_power',
-                        permvalue: 100,
-                    },
-                ]);
-            }
+        } catch (ex) {
+            console.log(`[ChannelBot] Could not modify/delete channel. Error was: ${ex.message}`);
         }
     }
 }
