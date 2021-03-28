@@ -10,11 +10,13 @@ declare module 'ts3-nodejs-library' {
 
 export class SupportBot {
     private _teamSpeakHandle: TeamSpeak | undefined = undefined;
-    private _managedSupportChannelHandles: TeamSpeakChannel[] = [];
     private _tsDefaultChannel: TeamSpeakChannel | undefined = undefined;
     private _registerChannelHandle: TeamSpeakChannel | undefined = undefined;
     private _supportGroupHandle: TeamSpeakServerGroup | undefined = undefined;
     private _teamGroupHandle: TeamSpeakServerGroup | undefined = undefined;
+    private _managedSupportChannelHandles: TeamSpeakChannel[] = [];
+    private _managedSupportChannel: string[] = ['Waitingroom', 'Appointment'];
+
     /**
      * Constructor of SupportBot invoces initialization.
      * @param {Bot} bot Handle to the main bot
@@ -44,10 +46,8 @@ export class SupportBot {
         this._teamGroupHandle = await bot.getGroupByName(process.env.TS_TEAM_GROUP || 'Team');
         this._supportGroupHandle = await bot.getGroupByName(process.env.TS_SUPPORT_GROUP || 'Bereitschaft');
         this._tsDefaultChannel = await bot.getDefaultChannel();
-        this._registerChannelHandle = await bot.getChannelByName(
-            process.env.TS_REGISTRATION_CHANNEL || 'An-/Abmeldung',
-        );
-        for (const managedSupportChannel of ['Warteraum', 'Termin']) {
+        this._registerChannelHandle = await bot.getChannelByName(process.env.TS_REGISTRATION_CHANNEL || 'On/OffDuty');
+        for (const managedSupportChannel of this._managedSupportChannel) {
             this._managedSupportChannelHandles.push(await bot.getChannelByName(managedSupportChannel));
         }
         bot.teamSpeakHandle.on('clientmoved', this.clientMoved.bind(this));
