@@ -25,13 +25,5 @@ pipeline {
                 archiveArtifacts artifacts: 'build/bundle.js'
             }
         }
-        stage('deploy'){
-            when {
-                branch 'master'
-            }
-            steps {
-                sh 'sudo jenkins_deploy ts_bot'
-            }
-        }
     }
 }
